@@ -1,8 +1,8 @@
 require "veritable/version"
 
 module Veritable
-#  def hi
-#    puts "Hello world!"
-#  end
-#  module_function :hi
+	def connect
+	    puts "Hello world!"
+	end
+	module_function :connect
 end

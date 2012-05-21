@@ -1,3 +1,3 @@
 module Veritable
-  VERSION = "0.9.3preBUILD_NUMBER"
+  VERSION = "0.9.3"
 end
