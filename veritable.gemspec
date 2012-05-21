@@ -1,0 +1,21 @@
+# -*- encoding: utf-8 -*-
+require File.expand_path('../lib/veritable/version', __FILE__)
+
+Gem::Specification.new do |gem|
+  gem.authors       = ["Prior Knowledge"]
+  gem.email         = ["support@priorknowledge.com"]
+  gem.description   = "Veritable is the predictive database developed by Prior Knowledge (http://www.priorknowledge.com)"
+  gem.summary       = "Ruby client for Veritable API"
+  gem.homepage      = "https://dev.priorknowledge.com"
+
+  gem.files         = `git ls-files`.split($\)
+  gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
+  gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
+  gem.name          = "veritable"
+  gem.require_paths = ["lib"]
+  gem.version       = Veritable::VERSION
+  
+  gem.add_development_dependency('test-unit')
+  gem.add_development_dependency('rake')
+  
+end
