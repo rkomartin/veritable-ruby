@@ -55,7 +55,8 @@ class VeritableTest < Test::Unit::TestCase
 
   def test_api_list_tables
     api = Veritable.connect
-    api.tables
+    tt = api.tables
+    assert tt.is_a? Veritable::Cursor
   end
 end
 
