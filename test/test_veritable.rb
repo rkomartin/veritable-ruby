@@ -6,7 +6,7 @@ class VeritableTest < Test::Unit::TestCase
   end
 
   def test_connect_unauthorized_fails
-    assert_raise(VeritableError) { Veritable.connect }
+    assert_raise(RestClient::Unauthorized) { Veritable.connect "foo"}
   end
 
   def test_connect_explicit
@@ -28,12 +28,18 @@ class VeritableTest < Test::Unit::TestCase
   end
   
   def test_api_root
+    api = Veritable.connect
+    api.root
   end
 
   def test_api_limits
+    api = Veritable.connect
+    api.limits
   end
 
   def test_api_list_tables
+    api = Veritable.connect
+    api.tables
   end
 end
 

@@ -1,16 +1,7 @@
 require 'veritable/connection'
 
 module Veritable
-  class VeritableResource
-    include Connection
-
-    def initialize(connection=nil, doc=nil)
-      @api_key = connection[:api_key]
-      @api_base_url = connection[:api_url]
-      connection.has_key? :ssl_verify ? @ssl_verify = connection[:ssl_verify] : @ssl_verify = true
-      connection.has_key? :enable_gzip ? @enable_gzip = connection[:enable_gzip] : @enable_gzip = true
-      @doc = doc
-    end
+  class VeritableResource < Connection
   end
 
   class API < VeritableResource
@@ -27,6 +18,6 @@ module Veritable
     end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::API url='" + @url + "'>"; end
+    def to_s; "#<Veritable::API url='" + base_url + "'>"; end
   end
 end
