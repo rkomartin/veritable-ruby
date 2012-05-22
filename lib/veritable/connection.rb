@@ -1,7 +1,7 @@
 require 'json'
 
 module Veritable
-  class Connection
+  module Connection
     def base_url
       @api_base_url
     end
