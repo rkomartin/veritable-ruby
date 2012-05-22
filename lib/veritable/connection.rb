@@ -2,11 +2,8 @@ require 'json'
 
 module Veritable
   class Connection
-    def initialize(api_key, api_url, opts={})
-      @api_key = api_key
-      @api_base_url = api_url
-      opts.has_key? :ssl_verify ? @ssl_verify = opts[:ssl_verify] : @ssl_verify = true
-      opts.has_key? :enable_gzip ? @enable_gzip = opts[:enable_gzip] : @enable_gzip = true
+    def base_url
+      @api_base_url
     end
 
     def get(url, headers={})
@@ -26,7 +23,7 @@ module Veritable
     end
 
     def request(verb, url, api_key=nil, payload=nil, headers={}, opts={})
-      url = @api_base_url + "/" + url
+      url = base_url + "/" + url
       api_key ||= @api_key
 
       opts.has_key? :ssl_verify ? ssl_verify = opts[:ssl_verify] : ssl_verify = @ssl_verify
