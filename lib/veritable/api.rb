@@ -7,8 +7,8 @@ module Veritable
     def initialize(connection=nil, doc=nil)
       @api_key = connection[:api_key]
       @api_base_url = connection[:api_url]
-      opts.has_key? :ssl_verify ? @ssl_verify = opts[:ssl_verify] : @ssl_verify = true
-      opts.has_key? :enable_gzip ? @enable_gzip = opts[:enable_gzip] : @enable_gzip = true
+      connection.has_key? :ssl_verify ? @ssl_verify = connection[:ssl_verify] : @ssl_verify = true
+      connection.has_key? :enable_gzip ? @enable_gzip = connection[:enable_gzip] : @enable_gzip = true
       @doc = doc
     end
   end
