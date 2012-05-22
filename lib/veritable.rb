@@ -4,6 +4,7 @@ require 'json'
 
 require 'veritable/api'
 require 'veritable/connection'
+require 'veritable/errors'
 require 'veritable/version'
 
 gem 'rest-client', '~> 1.4'
@@ -20,7 +21,11 @@ module Veritable
     opts[:enable_gzip] = true unless opts.has_key? :enable_gzip
 
     api = API.new(connection=opts)
-    r = api.root
+    begin
+      r = api.root
+    rescue
+      raise VeritableError
+    end
     api
   end
 end
