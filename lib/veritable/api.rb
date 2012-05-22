@@ -25,7 +25,21 @@ module Veritable
       get("tables")
     end
 
+    def table(name)
+    end
+    
     def inspect; to_s; end
     def to_s; "#<Veritable::API url='" + base_url + "'>"; end
   end
+
+  class Table < VeritableResource
+    def inspect; to_s; end
+    def to_s; "#<Veritable::Table _id='" + _id + "'>"; end
+  end
+
+  class Analysis < VeritableResource
+    def inspect; to_s; end
+    def to_s; "#<Veritable::Analysis _id='" + _id + "'>"; end
+  end
+
 end
