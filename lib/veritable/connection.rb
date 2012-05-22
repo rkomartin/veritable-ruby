@@ -3,15 +3,13 @@ require 'json'
 module Veritable
   class Connection
     def initialize(opts=nil, doc=nil)
-      @api_key = opts[:api_key]
-      @api_base_url = opts[:api_url]
-      opts.has_key?(:ssl_verify) ? @ssl_verify = opts[:ssl_verify] : @ssl_verify = true
-      opts.has_key?(:enable_gzip) ? @enable_gzip = opts[:enable_gzip] : @enable_gzip = true
+      @opts = opts
       @doc = doc
-    end
-
-    def base_url
-      @api_base_url
+      
+      raise VeritableError unless @opts.has_key?(:api_key)
+      raise VeritableError unless @opts.has_key?(:api_url)
+      @opts[:ssl_verify] = true unless @opts.has_key?(:ssl_verify)
+      @opts[:enable_gzip] = true unless @opts.has_key?(:enable_gzip)
     end
 
     def get(url, headers={})
@@ -31,10 +29,7 @@ module Veritable
     end
 
     def request(verb, url, payload=nil, headers={}, opts={})
-      url = base_url + "/" + url
-      opts.has_key?(:api_key) ? api_key = opts[:api_key] : api_key = @api_key
-      opts.has_key?(:ssl_verify) ? ssl_verify = opts[:ssl_verify] : ssl_verify = @ssl_verify
-      opts.has_key?(:enable_gzip) ? enable_gzip = opts[:enable_gzip] : enable_gzip = @enable_gzip
+      url = api_base_url + "/" + url
 
       headers = {
         :user_agent => USER_AGENT,
@@ -54,5 +49,13 @@ module Veritable
       response = RestClient::Request.execute(opts)
       return JSON.load(response)
     end
+
+    private
+
+    def api_key; @opts[:api_key]; end
+    def api_base_url; @opts[:api_url]; end
+    def ssl_verify; @opts[:ssl_verify]; end
+    def enable_gzip; @opts[:enable_gzip]; end
+
   end
 end
