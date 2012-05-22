@@ -1,4 +1,5 @@
 require 'veritable/object'
+require 'veritable/resource'
 
 module Veritable
   class Cursor < VeritableResource
