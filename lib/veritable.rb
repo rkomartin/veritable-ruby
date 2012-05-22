@@ -5,6 +5,7 @@ require 'json'
 require 'veritable/api'
 require 'veritable/connection'
 require 'veritable/errors'
+require 'veritable/util'
 require 'veritable/version'
 
 gem 'rest-client', '~> 1.4'
