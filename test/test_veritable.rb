@@ -58,6 +58,7 @@ class VeritableTest < Test::Unit::TestCase
     api = Veritable.connect
     tt = api.tables
     assert tt.is_a? Veritable::Cursor
+    assert tt.all? {|x| x.is_a? Hash}
   end
 end
 
