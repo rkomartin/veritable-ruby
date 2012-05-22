@@ -5,6 +5,7 @@ class VeritableTest < Test::Unit::TestCase
   def test_connect
     a = Veritable.connect
     assert a.is_a? Veritable::API
+    assert a.to_s.is_a? String
   end
 
   def test_connect_unauthorized_fails
