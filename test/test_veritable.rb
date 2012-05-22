@@ -6,7 +6,7 @@ class VeritableTest < Test::Unit::TestCase
   end
 
   def test_connect_unauthorized_fails
-    assert_raise(VeritableError, Veritable.connect)
+    assert_raise(VeritableError) { Veritable.connect }
   end
 
   def test_connect_explicit
