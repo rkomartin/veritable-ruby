@@ -22,7 +22,11 @@ module Veritable
     opts[:enable_gzip] = true unless opts.has_key?(:enable_gzip)
 
     api = API.new(opts)
-    r = api.root
+    connection_test = api.root
+    status = connection_test["status"]
+    entropy = connection_test["entropy"]
+    raise VeritableError if status != "SUCCESS"
+    raise VeritableError if ! entropy.is_a?(Float)
     api
   end
 end
