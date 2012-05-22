@@ -2,9 +2,9 @@ require 'veritable/object'
 require 'veritable/resource'
 
 module Veritable
-  class Cursor < Enumerator
+  class Cursor
     include VeritableResource
-
+    include Enumerable
     def initialize(opts=nil, doc=nil)
       super(opts, doc)
 
@@ -16,17 +16,19 @@ module Veritable
       @doc.has_key?(collection_key) ? @opts['key'] = collection_key : @opts['key'] = 'data'
     end
 
-    def next
-      if data.length > 0 or refresh > 0
-        if limit
-          if limit == 0
-            raise StopIteration
+    def each
+      loop do
+        if data.length > 0 or refresh > 0
+          if limit
+            if limit == 0
+              raise StopIteration
+            end
+            limit = limit - 1
           end
-          limit = limit - 1
+          yield data.shift
+        else
+          raise StopIteration
         end
-        return data.shift
-      else
-        raise StopIteration
       end
     end
 
@@ -54,7 +56,7 @@ module Veritable
     def collection; @opts['collection'] end
     def key; @opts['key'] end
     def next_page; link 'next' end
-    def last_page?; @doc.has_key? 'next' end
+    def last_page?; ! @doc.has_key? 'next' end
     def data; @doc[key] end
   end
 end
