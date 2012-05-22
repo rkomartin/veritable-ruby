@@ -9,23 +9,23 @@ module Veritable
       default_opts({:ssl_verify => true, :enable_gzip => true})
     end
 
-    def get(url, headers={})
-      request(:get, url, payload=nil, headers=headers, opts={})
+    def get(url, params=nil, headers={})
+      request(:get, url, params=params, payload=nil, headers=headers)
     end
 
     def post(url, payload, headers={})
-      request(:post, url, payload=payload, headers=headers, opts={})
+      request(:post, url, params=nil, payload=payload, headers=headers)
     end
 
     def put(url, payload, headers={})
-      request(:put, url, payload=payload, headers=headers, opts={})
+      request(:put, url, params=nil, payload=payload, headers=headers)
     end
 
     def delete(url, headers={})
-      request(:delete, url, payload=nil, headers=headers, opts={})
+      request(:delete, url, params=nil, payload=nil, headers=headers)
     end
 
-    def request(verb, url, payload=nil, headers={}, opts={})
+    def request(verb, url, params=nil, payload=nil, headers={})
       url = api_base_url + "/" + url
 
       headers = {
