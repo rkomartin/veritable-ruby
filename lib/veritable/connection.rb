@@ -2,7 +2,8 @@ require 'veritable/object'
 require 'json'
 
 module Veritable
-  class Connection < VeritableObject
+  module Connection
+    include VeritableObject
     def initialize(opts=nil, doc=nil)
       super(opts, doc)
       require_opts [:api_key, :api_url]

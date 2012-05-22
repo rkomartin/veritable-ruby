@@ -2,8 +2,8 @@ require 'veritable/object'
 require 'veritable/resource'
 
 module Veritable
-  class Cursor < VeritableResource
-    include Enumerator
+  class Cursor < Enumerator
+    include VeritableResource
 
     def initialize(opts=nil, doc=nil)
       super(opts, doc)

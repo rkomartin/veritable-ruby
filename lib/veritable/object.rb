@@ -1,6 +1,7 @@
 require 'veritable/errors'
 
-  class VeritableObject
+module Veritable
+  module VeritableObject
     def initialize(opts=nil, doc=nil)
       @opts = opts
       @doc = doc
@@ -16,3 +17,4 @@ require 'veritable/errors'
       hash.each {|k, v| @opts[k] = v unless @opts.has_key?(k)}
     end
   end
+end

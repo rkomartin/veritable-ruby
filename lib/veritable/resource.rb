@@ -2,7 +2,8 @@ require 'veritable/connection'
 require 'veritable/errors'
 
 module Veritable
-  class VeritableResource < Connection
+  module VeritableResource
+  	include Connection
 
     private
 

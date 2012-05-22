@@ -29,11 +29,6 @@ class VeritableTest < Test::Unit::TestCase
     assert_raise(VeritableError) { Veritable.connect({:api_url => "https://graph.facebook.com/zuck"}) }
   end
 
-  def test_instantiate_veritable_resource
-    v = Veritable::VeritableResource.new({:api_key =>"foo", :api_url => "bar"})
-    assert v.is_a? Veritable::VeritableResource
-  end
-
   def test_instantiate_api
     a =Veritable::API.new({:api_key =>"foo", :api_url =>"bar"})
     assert a.is_a? Veritable::API
