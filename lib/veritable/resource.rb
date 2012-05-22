@@ -8,7 +8,6 @@ module Veritable
     private
 
     def link(name)
-      raise VeritableError unless @doc['links'].has_key?(name)
       @doc['links'][name]
     end
   end
