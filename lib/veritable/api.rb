@@ -20,7 +20,7 @@ module Veritable
     end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::API url='" + base_url + "'>"; end
+    def to_s; "#<Veritable::API url='" + api_base_url + "'>"; end
   end
 
   class Table
