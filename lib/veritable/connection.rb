@@ -33,7 +33,7 @@ module Veritable
       opts.has_key? :enable_gzip ? enable_gzip = opts[:enable_gzip] : enable_gzip = @enable_gzip
 
       headers = {
-        :user_agent => USER_AGENT
+        :user_agent => USER_AGENT,
         :accept => :json,
         :accept_encoding => enable_gzip
       }.merge(headers)
