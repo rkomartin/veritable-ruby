@@ -1,15 +1,12 @@
+require 'veritable/object'
 require 'json'
 
 module Veritable
-  class Connection
+  class Connection < VeritableObject
     def initialize(opts=nil, doc=nil)
-      @opts = opts
-      @doc = doc
-      
-      raise VeritableError unless @opts.has_key?(:api_key)
-      raise VeritableError unless @opts.has_key?(:api_url)
-      @opts[:ssl_verify] = true unless @opts.has_key?(:ssl_verify)
-      @opts[:enable_gzip] = true unless @opts.has_key?(:enable_gzip)
+      super(opts, doc)
+      require_opts [:api_key, :api_url]
+      default_opts({:ssl_verify => true, :enable_gzip => true})
     end
 
     def get(url, headers={})
