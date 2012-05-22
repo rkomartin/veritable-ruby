@@ -43,10 +43,4 @@ module Veritable
     def inspect; to_s; end
     def to_s; "#<Veritable::API url='" + @url + "'>"; end
   end
-  
-
-  def self.api_key=(api_key); @@api_key = api_key; end
-  def self.api_key; @@api_key; end
-  def self.api_url=(api_url); @@api_url = api_url; end
-  def self.api_url; @@api_url; end
 end
