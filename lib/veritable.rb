@@ -11,6 +11,9 @@ require 'veritable/version'
 gem 'rest-client', '~> 1.4'
 require 'rest_client'
 
+gem "uuid", "~> 2.3.5"
+require 'uuid'
+
 module Veritable
   USER_AGENT = 'veritable-ruby ' + VERSION
   
