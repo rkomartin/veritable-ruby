@@ -48,7 +48,18 @@ module Veritable
         :payload => payload,
         :verify_ssl => ssl_verify,
       }
-      response = RestClient::Request.execute(opts)
+      begin
+        response = RestClient::Request.execute(opts)
+      rescue RestClient::Exception => e
+        begin
+          r = MultiJson.decode(e.response)
+          msg = r['message']
+          code = r['code']
+        rescue
+          raise e
+        end
+        raise VeritableError.new("HTTP Error #{e.message} -- #{code}: #{msg}")
+      end
       return MultiJson.decode(response)
     end
 

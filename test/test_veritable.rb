@@ -9,7 +9,7 @@ class VeritableConnectTest < Test::Unit::TestCase
   end
 
   def test_connect_unauthorized_fails
-    assert_raise(RestClient::Unauthorized) { Veritable.connect({:api_key => "foo"}) }
+    assert_raise(VeritableError) { Veritable.connect({:api_key => "foo"}) }
   end
 
   def test_connect_nogzip
