@@ -18,7 +18,7 @@ module Veritable
       Table.new(@opts, get("tables/#{table_id}"))
     end
 
-    def create_table(table_id=nil, description=nil, force=false)
+    def create_table(table_id=nil, description='', force=false)
       if ! table_id
         autogen = true
         table_id = Util.make_table_id
