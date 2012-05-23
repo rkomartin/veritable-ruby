@@ -13,7 +13,7 @@ module Veritable
     end
 
     def tables
-      Cursor.new({'collection' => "tables"}.update(@opts))
+      Cursor.new({'collection' => "tables"}.update(@opts)) {|x| Table.new(@opts, x)}
     end
 
     def table(name)
