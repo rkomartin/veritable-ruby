@@ -131,11 +131,37 @@ module Veritable
   class Analysis
     include VeritableResource
 
+    def update; @doc = get link 'self'; end
+
+    alias :rest_delete :delete
+    def delete; rest_delete link 'self'; end
+
+    def schema; get link 'schema'; end
+
+    def wait(max_time=nil, poll=2)
+      elapsed = 0
+      while state == 'running'
+#        FIXME
+      end
+    end
+
+    def predict(row, count=100)
+#      FIXME
+    end
+
+    def related_to(column_id, start=nil, limit=nil)
+#      FIXME
+    end
+
     def inspect; to_s; end
     def to_s; "#<Veritable::Analysis _id='" + _id + "'>"; end
 
     def _id; @doc['_id']; end
-
+    def created_at; @doc['created_at']; end
+    def finished_at; @doc['finished_at']; end
+    def state; @doc['state'] end
+    def error; state == 'failed' ? @doc['error'] : nil; end
+    def progress; state == 'succeeded' ? @doc['progress'] : nil; end
   end
 
   class Schema
@@ -144,4 +170,6 @@ module Veritable
     end
   end
 
+  class Prediction
+  end
 end
