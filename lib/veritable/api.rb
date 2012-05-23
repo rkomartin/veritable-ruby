@@ -40,6 +40,8 @@ module Veritable
       Table.new(@opts, doc)
     end
 
+    def delete_table(table_id); delete("tables" + table_id); end
+
     def inspect; to_s; end
     def to_s; "#<Veritable::API url='" + api_base_url + "'>"; end
 
@@ -64,12 +66,66 @@ module Veritable
       rest_delete link 'self'
     end
 
+    def row(row_id); get(link('rows') + "/" + row_id); end
+
+    def rows(start=nil, limit=nil)
+      Cursor.new({'collection' => link 'rows',
+        'start' => start,
+        'limit' => limit}.update(@opts))
+    end
+
+    def upload_row(row)
+      FIXME
+    end
+
+    def batch_upload_rows(rows, per_page=100)
+      FIXME
+    end
+
+    def delete_row(row)
+      FIXME
+    end
+
+    def batch_delete_rows(rows, per_page=100)
+      FIXME
+    end
+
+    def analysis(analysis_id)
+      FIXME
+    end
+
+    def analyses
+      FIXME
+    end
+
+    def delete_analysis
+      FIXME
+    end
+
+    def create_analysis
+      FIXME
+    end
+
     def inspect; to_s; end
     def to_s; "#<Veritable::Table _id='" + _id + "'>"; end
 
+    def _id; @doc['_id']; end
+
     private
 
-    def _id; @doc['_id']; end
+    def batch_modify_rows(rows, per_page=100)
+      FIXME
+    end
+
+    def has_analysis?(analysis_id)
+      begin
+        analysis analysis_id
+      rescue
+        false
+      else
+        true
+      end
+    end
   end
 
   class Analysis
@@ -78,8 +134,14 @@ module Veritable
     def inspect; to_s; end
     def to_s; "#<Veritable::Analysis _id='" + _id + "'>"; end
 
-    private
-
     def _id; @doc['_id']; end
+
   end
+
+  class Schema
+    def validate
+      FIXME
+    end
+  end
+
 end
