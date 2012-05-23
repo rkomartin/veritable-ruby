@@ -64,7 +64,12 @@ class VeritableAPITest < Test::Unit::TestCase
     assert tt.all? {|x| x.is_a? Veritable::Table}
   end
 
-  def test_create_table_autoid
+  def test_create_and_delete_table_autoid
+    t = @api.create_table
+    assert t.is_a? Veritable::Table
+    assert @api.has_table? t._id
+    @api.delete_table(t._id)
+    assert ! @api.has_table?(t._id)
   end
 
   def test_create_table_with_id
