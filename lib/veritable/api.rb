@@ -36,7 +36,7 @@ module Veritable
           delete_table table_id
         end
       end
-      doc = post "tables" {:_id => table_id, :description => description}
+      doc = post("tables", {:_id => table_id, :description => description})
       Table.new(@opts, doc)
     end
 
@@ -69,7 +69,7 @@ module Veritable
     def row(row_id); get(link('rows') + "/" + row_id); end
 
     def rows(start=nil, limit=nil)
-      Cursor.new({'collection' => link 'rows',
+      Cursor.new({'collection' => link('rows'),
         'start' => start,
         'limit' => limit}.update(@opts))
     end
