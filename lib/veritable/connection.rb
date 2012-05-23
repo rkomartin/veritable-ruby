@@ -19,10 +19,14 @@ module Veritable
     end
 
     def post(url, payload, headers={})
+      payload = MultiJson.encode(payload)
+      headers = headers.merge({:content_type => 'application/json'})
       request(:post, url, payload=payload, headers=headers)
     end
 
     def put(url, payload, headers={})
+      payload = MultiJson.encode(payload)
+      headers = headers.merge({:content_type => 'application/json'})
       request(:put, url, payload=payload, headers=headers)
     end
 
