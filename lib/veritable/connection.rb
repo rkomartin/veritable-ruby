@@ -11,6 +11,9 @@ module Veritable
     end
 
     def get(url, params=nil, headers={})
+      if params and params.count > 0
+        query_string = Util.query_params(params)
+      end
       request(:get, url, params=params, payload=nil, headers=headers)
     end
 
