@@ -23,7 +23,7 @@ class VeritableTest < Test::Unit::TestCase
   end
 
   def test_connect_no_json_failes
-    assert_raise(JSON::ParserError) { Veritable.connect({:api_url => "http://www.google.com"}) }
+    assert_raise(MultiJson::DecodeError) { Veritable.connect({:api_url => "http://www.google.com"}) }
   end
 
   def test_connect_not_api_fails
