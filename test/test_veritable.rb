@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'test/unit'
 require 'veritable'
 
@@ -73,9 +75,26 @@ class VeritableAPITest < Test::Unit::TestCase
   end
 
   def test_create_table_with_id
+    tid = Veritable::Util.make_table_id
+    t = @api.create_table(tid)
+    assert t.is_a? Veritable::Table
+    assert @api.has_table? tid
+    @api.delete_table tid
+  end
+
+  def test_create_table_with_id_json_roundtrip
+    tid = MultiJson.decode(MultiJson.encode({'id' => Veritable::Util.make_table_id}))['id']
+    t = @api.create_table(tid)
+    assert t.is_a? Veritable::Table
+    assert @api.has_table? tid
+    @api.delete_table tid
   end
 
   def test_create_table_invalid_id
+    invalids = ['éléphant', '374.34', 'ajfh/d/sfd@#$', 'きんぴらごぼう', '', ' foo', 'foo ', ' foo ', "foo\n", "foo\nbar", 3, 1.414, false, true, '_underscore']
+    invalids.each {|tid|
+      assert_raise(VeritableError, "ID #{tid} passed") { @api.create_table tid}
+    }
   end
 
   def test_create_table_description

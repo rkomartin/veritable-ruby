@@ -19,11 +19,12 @@ module Veritable
     end
 
     def create_table(table_id=nil, description='', force=false)
-      if ! table_id
+      if table_id.nil?
         autogen = true
         table_id = Util.make_table_id
       else
         autogen = false
+        Util.check_id table_id
       end
 
       if has_table? table_id
