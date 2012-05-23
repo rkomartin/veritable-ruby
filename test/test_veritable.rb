@@ -60,6 +60,43 @@ class VeritableTest < Test::Unit::TestCase
     assert tt.is_a? Veritable::Cursor
     assert tt.all? {|x| x.is_a? Veritable::Table}
   end
+
+  def test_create_table_autoid
+  end
+
+  def test_create_table_with_id
+  end
+
+  def test_create_table_invalid_id
+  end
+
+  def test_create_table_description
+  end
+
+  def test_get_table_by_id
+  end
+
+  def test_delete_table
+  end
+
+  def test_delete_deleted_table
+  end
+
+  def test_create_deleted_table
+  end
+
+  def test_get_deleted_table
+  end
+
+  def test_create_duplicate_tables
+  end
+
+  def test_create_duplicate_tables_force
+  end
+
+  def test_delete_table_by_id
+  end
+
 end
 
 class VeritableTestConnection < Test::Unit::TestCase
