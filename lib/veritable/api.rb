@@ -15,7 +15,7 @@ module Veritable
     end
 
     def table(table_id)
-      Table.new(@opts, get("tables/" + table_id))
+      Table.new(@opts, get("tables/#{table_id}"))
     end
 
     def create_table(table_id=nil, description=nil, force=false)
@@ -40,12 +40,10 @@ module Veritable
       Table.new(@opts, doc)
     end
 
-    def delete_table(table_id); delete("tables" + table_id); end
+    def delete_table(table_id); delete("tables/#{table_id}"); end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::API url='" + api_base_url + "'>"; end
-
-    private
+    def to_s; "#<Veritable::API url='#{api_base_url}'>"; end
 
     def has_table?(table_id)
       begin
@@ -66,7 +64,7 @@ module Veritable
       rest_delete link 'self'
     end
 
-    def row(row_id); get(link('rows') + "/" + row_id); end
+    def row(row_id); get("#{link('rows')}/#{row_id}"); end
 
     def rows(start=nil, limit=nil)
       Cursor.new({'collection' => link('rows'),
@@ -107,7 +105,7 @@ module Veritable
     end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::Table _id='" + _id + "'>"; end
+    def to_s; "#<Veritable::Table _id='#{_id}'>"; end
 
     def _id; @doc['_id']; end
 
@@ -154,7 +152,7 @@ module Veritable
     end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::Analysis _id='" + _id + "'>"; end
+    def to_s; "#<Veritable::Analysis _id='#{_id}'>"; end
 
     def _id; @doc['_id']; end
     def created_at; @doc['created_at']; end
