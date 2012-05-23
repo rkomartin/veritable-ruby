@@ -23,6 +23,10 @@ module Veritable
     include VeritableResource
     def inspect; to_s; end
     def to_s; "#<Veritable::Table _id='" + _id + "'>"; end
+
+    private
+
+    def _id; @doc['_id']; end
   end
 
   class Analysis
@@ -31,4 +35,8 @@ module Veritable
     def to_s; "#<Veritable::Analysis _id='" + _id + "'>"; end
   end
 
+    private
+
+    def _id; @doc['_id']; end
+  end
 end
