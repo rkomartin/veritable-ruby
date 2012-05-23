@@ -75,35 +75,35 @@ module Veritable
     end
 
     def upload_row(row)
-      FIXME
+#      FIXME
     end
 
     def batch_upload_rows(rows, per_page=100)
-      FIXME
+#      FIXME
     end
 
     def delete_row(row)
-      FIXME
+#      FIXME
     end
 
     def batch_delete_rows(rows, per_page=100)
-      FIXME
+#      FIXME
     end
 
     def analysis(analysis_id)
-      FIXME
+#      FIXME
     end
 
     def analyses
-      FIXME
+#      FIXME
     end
 
     def delete_analysis
-      FIXME
+#      FIXME
     end
 
     def create_analysis
-      FIXME
+#      FIXME
     end
 
     def inspect; to_s; end
@@ -114,7 +114,7 @@ module Veritable
     private
 
     def batch_modify_rows(rows, per_page=100)
-      FIXME
+#      FIXME
     end
 
     def has_analysis?(analysis_id)
@@ -140,7 +140,7 @@ module Veritable
 
   class Schema
     def validate
-      FIXME
+#      FIXME
     end
   end
 
