@@ -4,13 +4,9 @@ require 'veritable/resource'
 module Veritable
   class API
     include VeritableResource
-    def root
-      get("")
-    end
+    def root; get(""); end
 
-    def limits
-      get("user/limits")
-    end
+    def limits; get("user/limits"); end
 
     def tables
       Cursor.new({'collection' => "tables"}.update(@opts)) {|x| Table.new(@opts, x)}
