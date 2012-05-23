@@ -1,7 +1,7 @@
 require 'test/unit'
 require 'veritable'
 
-class VeritableTest < Test::Unit::TestCase
+class VeritableConnectTest < Test::Unit::TestCase
   def test_connect
     a = Veritable.connect
     assert a.is_a? Veritable::API
@@ -34,18 +34,22 @@ class VeritableTest < Test::Unit::TestCase
     a =Veritable::API.new({:api_key =>"foo", :api_url =>"bar"})
     assert a.is_a? Veritable::API
   end
-  
+end
+
+class VeritableAPITest < Test::Unit::TestCase
+  def setup
+    @api = Veritable.connect
+  end
+
   def test_api_root
-    api = Veritable.connect
-    r = api.root
+    r = @api.root
     assert r.is_a? Hash
     assert r['status'] == "SUCCESS"
     assert r['entropy'].is_a? Float
   end
 
   def test_api_limits
-    api = Veritable.connect
-    l = api.limits
+    l = @api.limits
     assert l.is_a? Hash
     %w{predictions_max_count max_string_length schema_max_cols
       max_row_batch_count max_categories predictions_max_cols table_max_rows
@@ -55,8 +59,7 @@ class VeritableTest < Test::Unit::TestCase
   end
 
   def test_api_list_tables
-    api = Veritable.connect
-    tt = api.tables
+    tt = @api.tables
     assert tt.is_a? Veritable::Cursor
     assert tt.all? {|x| x.is_a? Veritable::Table}
   end
