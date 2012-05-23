@@ -31,7 +31,7 @@ module Veritable
           return create_table(nil, description, false)
         end
         if ! force
-          raise VeritableError
+          raise VeritableError.new("Couldn't create table -- table with id #{table_id} already exists.")
         else
           delete_table table_id
         end

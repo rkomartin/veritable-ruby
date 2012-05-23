@@ -10,7 +10,7 @@ module Veritable
     private
 
     def require_opts(keys)
-      keys.each {|k| raise VeritableError unless @opts.has_key?(k)}
+      keys.each {|k| raise VeritableError.new("Error initializing object -- must provide #{k}") unless @opts.has_key?(k)}
     end
 
     def default_opts(hash)

@@ -31,8 +31,8 @@ module Veritable
     connection_test = api.root
     status = connection_test["status"]
     entropy = connection_test["entropy"]
-    raise VeritableError if status != "SUCCESS"
-    raise VeritableError if ! entropy.is_a?(Float)
+    raise VeritableError.new("No Veritable server responding at #{opts[:api_url]}") if status != "SUCCESS"
+    raise VeritableError.new("No Veritable server responding at #{opts[:api_url]}") if ! entropy.is_a?(Float)
     api
   end
 end
