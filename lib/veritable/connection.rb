@@ -13,34 +13,24 @@ module Veritable
     def get(url, params=nil, headers={})
       if params and params.count > 0
         query_string = Util.query_params(params)
+        url += "?#{query_string}"
       end
-      request(:get, url, params=params, payload=nil, headers=headers)
+      request(:get, url, payload=nil, headers=headers)
     end
 
     def post(url, payload, headers={})
-      request(:post, url, params=nil, payload=payload, headers=headers)
+      request(:post, url, payload=payload, headers=headers)
     end
 
     def put(url, payload, headers={})
-      request(:put, url, params=nil, payload=payload, headers=headers)
+      request(:put, url, payload=payload, headers=headers)
     end
 
     def delete(url, headers={})
-      request(:delete, url, params=nil, payload=nil, headers=headers)
+      request(:delete, url, payload=nil, headers=headers)
     end
 
-    # when :get, :head, :delete
-    #   # Make params into GET parameters
-    #   if params && params.count
-    #     query_string = Util.flatten_params(params).collect{|p| "#{p[0]}=#{p[1]}"}.join('&')
-    #     url += "?#{query_string}"
-    #   end
-    #   payload = nil
-    # else
-    #   payload = params
-    # end
-
-    def request(verb, url, params=nil, payload=nil, headers={})
+    def request(verb, url, payload=nil, headers={})
       url = api_base_url + "/" + url
 
       headers = {
