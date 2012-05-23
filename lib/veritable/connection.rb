@@ -26,6 +26,17 @@ module Veritable
       request(:delete, url, params=nil, payload=nil, headers=headers)
     end
 
+    # when :get, :head, :delete
+    #   # Make params into GET parameters
+    #   if params && params.count
+    #     query_string = Util.flatten_params(params).collect{|p| "#{p[0]}=#{p[1]}"}.join('&')
+    #     url += "?#{query_string}"
+    #   end
+    #   payload = nil
+    # else
+    #   payload = params
+    # end
+
     def request(verb, url, params=nil, payload=nil, headers={})
       url = api_base_url + "/" + url
 
