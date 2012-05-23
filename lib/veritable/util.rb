@@ -1,4 +1,5 @@
 require 'uuid'
+require 'uri'
 
 module Veritable
   module Util
