@@ -1,5 +1,5 @@
 require 'veritable/object'
-require 'json'
+require 'multi_json'
 
 module Veritable
   module Connection
@@ -45,7 +45,7 @@ module Veritable
         :verify_ssl => ssl_verify,
       }
       response = RestClient::Request.execute(opts)
-      return JSON.load(response)
+      return MultiJson.decode(response)
     end
 
     private
