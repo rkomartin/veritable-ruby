@@ -41,6 +41,7 @@ end
 class VeritableAPITest < Test::Unit::TestCase
   def setup
     @api = Veritable.connect
+    @tid = Veritable::Util.make_table_id
   end
 
   def test_api_root
@@ -75,11 +76,10 @@ class VeritableAPITest < Test::Unit::TestCase
   end
 
   def test_create_table_with_id
-    tid = Veritable::Util.make_table_id
-    t = @api.create_table(tid)
+    t = @api.create_table(@tid)
     assert t.is_a? Veritable::Table
-    assert @api.has_table? tid
-    @api.delete_table tid
+    assert @api.has_table? @tid
+    @api.delete_table @tid
   end
 
   def test_create_table_with_id_json_roundtrip
@@ -98,49 +98,77 @@ class VeritableAPITest < Test::Unit::TestCase
   end
 
   def test_create_table_description
-    tid = Veritable::Util.make_table_id
-    @api.create_table tid, "A test table"
-    @api.delete_table tid
+    @api.create_table @tid, "A test table"
+    @api.delete_table @tid
   end
 
   def test_get_table_by_id
-    tid = Veritable::Util.make_table_id
-    @api.create_table tid, "A table"
-    t = @api.table tid
+    @api.create_table @tid, "A table"
+    t = @api.table @tid
     assert t.is_a? Veritable::Table
     assert t.description == "A table"
-    @api.delete_table tid
+    @api.delete_table @tid
   end
 
   def test_delete_deleted_table
-    tid = Veritable::Util.make_table_id
-    @api.create_table tid
-    @api.delete_table tid
-    @api.delete_table tid
+    @api.create_table @tid
+    @api.delete_table @tid
+    @api.delete_table @tid
   end
 
   def test_create_deleted_table
-    tid = Veritable::Util.make_table_id
-    @api.create_table tid
-    @api.delete_table tid
-    @api.create_table tid
-    @api.delete_table tid
-    assert_raise(VeritableError) {@api.table tid}
+    @api.create_table @tid
+    @api.delete_table @tid
+    @api.create_table @tid
+    @api.delete_table @tid
+    assert_raise(VeritableError) {@api.table @tid}
   end
 
   def test_create_duplicate_tables
-    tid = Veritable::Util.make_table_id
-    @api.create_table tid
-    assert_raise(VeritableError) {@api.create_table tid}
-    @api.delete_table tid
+    @api.create_table @tid
+    assert_raise(VeritableError) {@api.create_table @tid}
+    @api.delete_table @tid
   end
 
   def test_create_duplicate_tables_force
-    tid = Veritable::Util.make_table_id
-    @api.create_table tid
-    @api.create_table tid, '', true
+    @api.create_table @tid
+    @api.create_table @tid, '', true
   end
 
+  # FIXME inject to test autogen collision
+end
+
+class VeritableRowOpTest < Test::Unit::TestCase
+  def setup
+    @api = Veritable.connect
+    @t = @api.create_table
+  end
+
+  def teardown
+    @t.delete
+  end
+
+  def test_upload_row_id
+    @t.upload_row({'_id' => 'onebug', 'zim' => 'zam', 'wos' => 19.2})
+  end
+
+  def test_upload_row_id_json_roundtrip
+    id = MultiJson.decode(MultiJson.encode(
+            {'id' => Veritable::Util.make_table_id }))['id']
+    @t.upload_row({'_id' => id, 'zim' => 'zam', 'wos' => 19.2})
+  end
+
+  def test_upload_row_invalid_id
+    invalids = ['éléphant', '374.34', 'ajfh/d/sfd@#$', 'きんぴらごぼう', '', ' foo', 'foo ', ' foo ', "foo\n", "foo\nbar", 3, 1.414, false, true, '_underscore']
+    invalids.each {|id|
+      assert_raise(VeritableError, "ID #{id} passed") {
+        @t.upload_row({'_id' => id, 'zim' => 'zam', 'wos' => 19.2})}
+    }
+  end
+
+  def test_upload_row_autogen_id
+    assert_raise(VeritableError) { @t.upload_row({'zim' => 'zom', 'wos' => 21.1})}
+  end
 
 end
 
