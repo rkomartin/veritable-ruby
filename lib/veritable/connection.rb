@@ -31,7 +31,13 @@ module Veritable
     end
 
     def delete(url, headers={})
-      request(:delete, url, payload=nil, headers=headers)
+      begin
+        request(:delete, url, payload=nil, headers=headers)
+      rescue VeritableError => e
+        if not e.respond_to? :http_code or not e.http_code == "404 Resource Not Found"
+          raise e
+        end
+      end
     end
 
     def request(verb, url, payload=nil, headers={})
@@ -62,7 +68,7 @@ module Veritable
         rescue
           raise e
         end
-        raise VeritableError.new("HTTP Error #{e.message} -- #{code}: #{msg}")
+        raise VeritableError.new("HTTP Error #{e.message} -- #{code}: #{msg}", {'http_code' => e.message, 'api_code' => code, 'api_message' => msg})
       end
       return MultiJson.decode(response)
     end
