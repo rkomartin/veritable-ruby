@@ -74,35 +74,64 @@ module Veritable
     end
 
     def upload_row(row)
-#      FIXME
+      Util.check_row row
+      put "#{link('rows')}/#{row['_id']}", row
     end
 
     def batch_upload_rows(rows, per_page=100)
-#      FIXME
+      batch_modify_rows('put', rows, per_page)
     end
 
-    def delete_row(row)
-#      FIXME
+    def delete_row(row_id)
+      delete "#{link('rows')}/row_id"
     end
 
     def batch_delete_rows(rows, per_page=100)
-#      FIXME
+      batch_modify_rows('delete', rows, per_page)
     end
 
     def analysis(analysis_id)
-#      FIXME
+      Analysis.new(@opts, get("#{link('analyses')}/#{analysis_id}"))
     end
 
     def analyses
-#      FIXME
+      Cursor.new({'collection' => link('analyses')}.update(@opts)) {|x| Analysis.new(@opts, x)}
     end
 
-    def delete_analysis
-#      FIXME
+    def delete_analysis(analysis_id)
+      delete "#{link('analyses')}/analysis_id"
     end
 
-    def create_analysis
-#      FIXME
+    def create_analysis(schema, analysis_id=nil, description="", force=false, analysis_type="veritable")
+      if analysis_type != "veritable"
+        if analysis_type.respond_to? :to_s
+          raise VeritableError.new("Invalid analysis type #{analysis_type}.")
+        else
+          raise VeritableError.new("Invalid analysis type.")
+        end
+      end
+
+      if analysis_id.nil?
+        autogen = true
+        analysis_id = Util.make_analysis_id
+      else
+        autogen = false
+        Util.check_id analysis_id
+      end
+
+      if has_table? analysis_id
+        if autogen
+          return create_analysis(nil, description, false)
+        end
+        if ! force
+          raise VeritableError.new("Couldn't create table -- table with id #{table_id} already exists.")
+        else
+          delete_table table_id
+        end
+      end
+      doc = post("tables", {:_id => table_id, :description => description})
+      Table.new(@opts, doc)
+
     end
 
     def inspect; to_s; end
@@ -111,12 +140,6 @@ module Veritable
     def _id; @doc['_id']; end
     def description; @doc['description']; end
 
-    private
-
-    def batch_modify_rows(rows, per_page=100)
-#      FIXME
-    end
-
     def has_analysis?(analysis_id)
       begin
         analysis analysis_id
@@ -124,6 +147,30 @@ module Veritable
         false
       else
         true
+      end
+    end
+
+    private
+
+    def batch_modify_rows(action, rows, per_page=100)
+      if not per_page.is_a? Fixnum or not per_page > 0
+        raise VeritableError.new("Batch upload or delete must have integer page size greater than 0.")
+        rows.each {|row| Util.check_row row}
+        ct = (1..per_page).to_a.cycle
+        batch = Array.new()
+        ct.each { |ct|
+          if rows.empty?
+            if batch.size > 0
+              post link('rows'), {'action' => action, 'rows' => batch}
+            end
+            break
+          end
+          batch.push rows.shift
+          if ct == per_page
+            post link('rows'), {'action' => action, 'rows' => batch}
+            batch = Array.new()
+          end
+        }
       end
     end
   end
@@ -165,11 +212,15 @@ module Veritable
   end
 
   class Schema
+    def initialize(hash)
+#      FIXME
+    end
     def validate
 #      FIXME
     end
   end
 
   class Prediction
+#      FIXME
   end
 end

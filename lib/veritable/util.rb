@@ -30,6 +30,26 @@ module Veritable
         end
       end
 
+      def check_row(row)
+        if not row.is_a? Hash
+          begin
+            row.to_s
+          rescue
+            raise VeritableError.new("Invalid row -- Must provide a hash of column name-value pairs.")
+          else
+            raise VeritableError.new("Invalid row #{row} -- Must provide a hash of column name-value pairs.")
+          end
+        elsif not row.has_key? '_id'
+          raise VeritableError.new("Invalid row #{row} -- rows must contain unique row ids in the '_id' field.")
+        else
+          begin
+            check_id row['_id']
+          rescue VeritableError => e
+            raise VeritableError.new("Invalid row #{row} -- #{e}")
+          end
+        end
+      end
+
       private
 
       def flatten_params(params, parent=nil)
