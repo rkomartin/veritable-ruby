@@ -98,31 +98,49 @@ class VeritableAPITest < Test::Unit::TestCase
   end
 
   def test_create_table_description
+    tid = Veritable::Util.make_table_id
+    @api.create_table tid, "A test table"
+    @api.delete_table tid
   end
 
   def test_get_table_by_id
-  end
-
-  def test_delete_table
+    tid = Veritable::Util.make_table_id
+    @api.create_table tid, "A table"
+    t = @api.table tid
+    assert t.is_a? Veritable::Table
+    assert t.description == "A table"
+    @api.delete_table tid
   end
 
   def test_delete_deleted_table
+    tid = Veritable::Util.make_table_id
+    @api.create_table tid
+    @api.delete_table tid
+    @api.delete_table tid
   end
 
   def test_create_deleted_table
-  end
-
-  def test_get_deleted_table
+    tid = Veritable::Util.make_table_id
+    @api.create_table tid
+    @api.delete_table tid
+    @api.create_table tid
+    @api.delete_table tid
+    assert_raise(VeritableError) {@api.table tid}
   end
 
   def test_create_duplicate_tables
+    tid = Veritable::Util.make_table_id
+    @api.create_table tid
+    assert_raise(VeritableError) {@api.create_table tid}
+    @api.delete_table tid
   end
 
   def test_create_duplicate_tables_force
+    tid = Veritable::Util.make_table_id
+    @api.create_table tid
+    @api.create_table tid, '', true
   end
 
-  def test_delete_table_by_id
-  end
 
 end
 
