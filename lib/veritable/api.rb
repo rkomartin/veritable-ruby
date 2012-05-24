@@ -109,6 +109,7 @@ module Veritable
     def to_s; "#<Veritable::Table _id='#{_id}'>"; end
 
     def _id; @doc['_id']; end
+    def description; @doc['description']; end
 
     private
 
