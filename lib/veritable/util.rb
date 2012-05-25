@@ -1,3 +1,4 @@
+require 'veritable/datatypes'
 require 'veritable/errors'
 require 'uuid'
 require 'uri'
@@ -50,6 +51,18 @@ module Veritable
         end
       end
 
+      def check_datatype(datatype, msg=nil)
+        if not DATATYPES.include? datatype
+          begin
+            datatype.to_s
+          rescue
+            raise VeritableError.new("#{msg}Invalid data type.")
+          else
+            raise VeritableError.new("#{msg}Invalid data type '#{datatype}'.")
+          end
+        end
+      end
+      
       private
 
       def flatten_params(params, parent=nil)

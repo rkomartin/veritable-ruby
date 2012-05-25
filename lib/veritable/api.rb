@@ -254,6 +254,7 @@ module Veritable
 
 class Schema < Hash
   def initialize(data, subset=nil)
+    # FIXME do some validation on initialize
     data.each {|k, v|
       if subset.is_a? Array
         self[k] = v if subset.include? k
@@ -265,20 +266,127 @@ class Schema < Hash
     }
   end
 
+  def type(column)
+    self[column]['type']
+  end
+
   def validate
 #      FIXME
   end
 end
 
-  class Prediction
+  class Prediction < Hash
     attr_reader :request
     attr_reader :distribution
     attr_reader :schema
+    attr_reader :uncertainty
 
     def initialize(request, distribution, schema)
-      @request = row
-      @distribution = res
+      @request = request
+      @distribution = distribution
       @schema = Schema.new(request.keys)
+      @uncertainty = Hash.new()
+
+      request.each { |k,v|
+        if v.nil?
+          # FIXME
+        else
+          self[k] = v
+          @uncertainty[k] = 0.0
+        end
+      }
+    end
+
+    def prob_within(column, range)
+      col_type = schema.type column
+      check_datatype(col_type, "Probability within -- ")
+      if col_type == 'boolean' or col_type == 'categorical'
+        count = distribution.inject(0) {|memo, row|
+          memo + 1 if range.include? row[column]
+        }
+        count.to_f / distribution.size
+      elsif col_type == 'count' or col_type == 'real'
+        mn = range[0]
+        mx = range[0]
+        count = distribution.inject(0) {|memo, row|
+          v = row[column]
+          memo + 1 if (mn.nil? or v >= mn) and (mx.nil? or v <=mx)
+        }
+        count.to_f / distribution.size
+    end
+
+    def credible_values(column, p=nil)
+      col_type = schema.type column
+      check_datatype(col_type, "Credible values -- ")
+      if col_type == 'boolean' or col_type == 'categorical'
+        p = .5 if p.nil?
+        tf = Hash.new
+        (freqs.sort.reject {|c, a| a < p}).each {|k, v| tf[k] = v}
+        tf
+      elsif col_type == 'count' or col_type == 'real'
+        p = .9 if p.nil?
+        N = distribution.size
+        a = (N * (1.0 - p) / 2.0).round.to_i
+        sv = sorted_values
+        N = sv.size
+        lo = sv[a]
+        hi = sv[N - 1 - a]
+        [lo, hi]
+      end
+    end
+
+    private
+
+    def sorted_values(column)
+      values = (distribution.collect {|row| row[column]}).reject {|x| x.nil?}
+      values.sort
+    end
+
+    def counts(column)
+      counts = Hash.new()
+      distribution.each {|row|
+        counts[row[column]] += 1 if row.has_key? column
+      }
+      counts
+    end
+
+    def freqs(counts)
+      total = counts.values.inject(0) {|memo, obj| memo + obj}
+      freqs = Hash.new()
+      counts.each {|k, v|
+        freqs[k] = v.to_f / total
+      }
+      freqs
+    end
+
+    def point_estimate(column)
+      col_type = schema.type column
+      check_datatype(col_type, "Point estimate -- ")
+      if col_type == 'boolean' or col_type == 'categorical'
+        # use the mode
+        counts(column).max[0]
+      elsif col_type == 'real' or col_type == 'count'
+        # use the mean
+        values = distribution.collect {|row| row[column]}
+        mean = (values.inject(0) {|memo, obj| memo + obj}) / values.size.to_f
+        col_type == real ? mean : mean.round.to_i
+      end
+    end
+
+      def calculate_uncertainty(column)
+        values = distribution.collect {|row| row[column]}
+        col_type = schema.type column
+        check_datatype(col_type, "Calculate uncertainty -- ")
+        N = values.size
+        if col_type == 'boolean' or col_type == 'categorical'
+          e = (counts col_type).max[0]
+          c = 1.0 - (vals.count {|v| v == e} / N.to_f)
+          c.to_f
+        elsif col_type == 'count' or col_type == 'real'
+          r = credible_values column
+          (r[1] - r[0]).to_f
+        end
+      end
     end
   end
 end
