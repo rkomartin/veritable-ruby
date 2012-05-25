@@ -331,18 +331,18 @@ end
       col_type = schema.type column
       check_datatype(col_type, "Credible values -- ")
       if col_type == 'boolean' or col_type == 'categorical'
-        p = .5 if p.nil?
+        p = 0.5 if p.nil?
         tf = Hash.new
         (freqs.sort.reject {|c, a| a < p}).each {|k, v| tf[k] = v}
         tf
       elsif col_type == 'count' or col_type == 'real'
-        p = .9 if p.nil?
-        N = distribution.size
-        a = (N * (1.0 - p) / 2.0).round.to_i
+        p = 0.9 if p.nil?
+        n = distribution.size
+        a = (n * (1.0 - p) / 2.0).round.to_i
         sv = sorted_values
-        N = sv.size
+        n = sv.size
         lo = sv[a]
-        hi = sv[N - 1 - a]
+        hi = sv[n - 1 - a]
         [lo, hi]
       end
     end
@@ -389,10 +389,10 @@ end
         values = distribution.collect {|row| row[column]}
         col_type = schema.type column
         check_datatype(col_type, "Calculate uncertainty -- ")
-        N = values.size
+        n = values.size
         if col_type == 'boolean' or col_type == 'categorical'
           e = (counts col_type).max[0]
-          c = 1.0 - (vals.count {|v| v == e} / N.to_f)
+          c = 1.0 - (vals.count {|v| v == e} / n.to_f)
           c.to_f
         elsif col_type == 'count' or col_type == 'real'
           r = credible_values column
