@@ -183,21 +183,59 @@ module Veritable
     alias :rest_delete :delete
     def delete; rest_delete link 'self'; end
 
-    def schema; get link 'schema'; end
+    def schema; Schema.new(get(link('schema'))); end
 
     def wait(max_time=nil, poll=2)
       elapsed = 0
-      while state == 'running'
-#        FIXME
+      while running?
+        sleep poll
+        if not max_time.nil?
+          elapsed += poll
+          if elapsed > max_time
+            raise VeritableError.new("Wait for analysis -- Maximum time of #{max_time} second exceeded.")
+          end
+        end
+        update
       end
     end
 
     def predict(row, count=100)
-#      FIXME
+      update if running?
+      if succeeded?
+        if not row.is_a? Hash
+          raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
+        end
+        res = post(link('predict'), {'data' => row, 'count' => count})
+        if not res.is_a? Array
+          begin
+            res.to_s
+          rescue
+            raise VeritableError.new("Predict -- Error making predictions: #{res}")
+          else
+            raise VeritableError.new("Predict -- Error making predictions.")
+          end
+        end
+        Prediction.new(row, res, schema)
+      elsif running?
+        raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
+      elsif failed?
+        raise VeritableError.new("Predict -- Analysis with id #{_id} has failed and cannot predict.")
+      else
+        raise VeritableError.new("Predict -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
     end
 
     def related_to(column_id, start=nil, limit=nil)
-#      FIXME
+      update if running?
+      if succeeded?
+        Cursor.new({'collection' => "#{link('analyses')}/#{column_id}"}.update(@opts))
+      elsif running?
+        raise VeritableError.new("Related -- Analysis with id #{_id} is still running and not yet ready to calculate related.")
+      elsif failed?
+        raise VeritableError.new("Related -- Analysis with id #{_id} has failed and cannot calculate related.")
+      else
+        raise VeritableError.new("Related -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
     end
 
     def inspect; to_s; end
@@ -211,14 +249,23 @@ module Veritable
     def progress; state == 'succeeded' ? @doc['progress'] : nil; end
   end
 
-  class Schema
-    def initialize(hash)
-#      FIXME
-    end
-    def validate
-#      FIXME
-    end
+class Schema < Hash
+  def initialize(data, subset=nil)
+    data.each {|k, v|
+      if subset.is_a? Array
+        self[k] = v if subset.include? k
+      elsif subset.is_a? Hash
+        self[k] = v if subset.has_key? k
+      else
+        self[k] = v
+      end
+    }
   end
+
+  def validate
+#      FIXME
+  end
+end
 
   class Prediction
 #      FIXME
