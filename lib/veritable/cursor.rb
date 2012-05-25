@@ -21,10 +21,8 @@ module Veritable
       loop do
         if data.length > 0 or refresh > 0
           if limit
-            if limit == 0
-              raise StopIteration
-            end
-            limit = limit - 1
+            raise StopIteration if limit == 0
+            limit -= 1
           end
           if lazymap
             yield lazymap.call(data.shift)
@@ -36,7 +34,6 @@ module Veritable
         end
       end
     end
-
     def inspect; to_s; end
     def to_s; "#<Veritable::Cursor collection='" + collection + "'>"; end
 
