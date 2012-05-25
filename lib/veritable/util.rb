@@ -62,7 +62,7 @@ module Veritable
           end
         end
       end
-      
+
       private
 
       def flatten_params(params, parent=nil)

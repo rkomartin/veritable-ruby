@@ -87,7 +87,13 @@ module Veritable
     end
 
     def batch_delete_rows(rows, per_page=100)
-      batch_modify_rows('delete', rows, per_page)
+      begin
+        batch_modify_rows('delete', rows, per_page)
+      rescue VeritableError => e
+        if not e.respond_to? :http_code or not e.http_code == "404 Resource Not Found"
+          raise e
+        end 
+      end
     end
 
     def analysis(analysis_id)
@@ -155,23 +161,29 @@ module Veritable
     def batch_modify_rows(action, rows, per_page=100)
       if not per_page.is_a? Fixnum or not per_page > 0
         raise VeritableError.new("Batch upload or delete must have integer page size greater than 0.")
-        rows.each {|row| Util.check_row row}
-        ct = (1..per_page).to_a.cycle
-        batch = Array.new()
-        ct.each { |ct|
-          if rows.empty?
-            if batch.size > 0
-              post link('rows'), {'action' => action, 'rows' => batch}
-            end
-            break
-          end
-          batch.push rows.shift
-          if ct == per_page
-            post link('rows'), {'action' => action, 'rows' => batch}
-            batch = Array.new()
-          end
-        }
       end
+      rows = rows.collect {|row|
+        Util.check_row(row)
+        row
+      }
+      if (not rows.is_a? Array) and (not rows.is_a? Veritable::Cursor)
+        raise VeritableError.new("Must pass an array of row hashes or a cursor of rows to batch upload or delete.")
+      end
+      ct = (1..per_page).to_a.cycle
+      batch = Array.new()
+      ct.each { |ct|
+        if rows.empty?
+          if batch.size > 0
+            post link('rows'), {'action' => action, 'rows' => batch}
+          end
+          break
+        end
+        batch.push rows.shift
+        if ct == per_page
+          post link('rows'), {'action' => action, 'rows' => batch}
+          batch = Array.new()
+        end
+      }
     end
   end
 
