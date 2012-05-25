@@ -244,7 +244,10 @@ module Veritable
     def _id; @doc['_id']; end
     def created_at; @doc['created_at']; end
     def finished_at; @doc['finished_at']; end
-    def state; @doc['state'] end
+    def state; @doc['state']; end
+    def running?; state == 'running'; end
+    def succeeded?; state == 'succeeded'; end
+    def failed?; state == 'failed'; end
     def error; state == 'failed' ? @doc['error'] : nil; end
     def progress; state == 'succeeded' ? @doc['progress'] : nil; end
   end
@@ -268,6 +271,14 @@ class Schema < Hash
 end
 
   class Prediction
-#      FIXME
+    attr_reader :request
+    attr_reader :distribution
+    attr_reader :schema
+
+    def initialize(request, distribution, schema)
+      @request = row
+      @distribution = res
+      @schema = Schema.new(request.keys)
+    end
   end
 end
