@@ -67,10 +67,10 @@ module Veritable
 
     def row(row_id); get("#{link('rows')}/#{row_id}"); end
 
-    def rows(start=nil, limit=nil)
+    def rows(opts={'start' => nil, 'limit' => nil})
       Cursor.new({'collection' => link('rows'),
-        'start' => start,
-        'limit' => limit}.update(@opts))
+        'start' => opts['start'],
+        'limit' => opts['limit']}.update(@opts))
     end
 
     def upload_row(row)
