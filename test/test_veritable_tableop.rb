@@ -9,15 +9,15 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def setup
     @api = Veritable.connect
     @t = @api.create_table
-    @t.batch_upload_rows(
-      [
+    @rs = [
        {'_id' => 'onebug', 'zim' => 'zam', 'wos' => 19.2},
        {'_id' => 'twobug', 'zim' => 'vim', 'wos' => 11.3},
        {'_id' => 'threebug', 'zim' => 'fop', 'wos' => 17.5},
        {'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
        {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
        {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9}
-      ])
+      ]
+    @t.batch_upload_rows rs
     @t2 = @api.create_table
     @t2.batch_upload_rows(
       [{'_id' => 'row1', 'cat' => 'a', 'ct' => 0, 'real' => 1.02394, 'bool' => true},
@@ -68,20 +68,77 @@ class VeritableTableOpTest < Test::Unit::TestCase
     assert_raise(VeritableError) { @t.row('fivebug') }
   end
 
-end
-
-class VeritableTestConnection < Test::Unit::TestCase
-  def test_instantiate
+  def test_batch_delete_rows
+    assert @t.rows.size == @rs.size
+    @t.batch_delete_rows @rs
+    assert @t.rows.size == 0
+    @t.batch_upload_rows @rs
+    assert @t.rows.size == @rs.size
+    @t.batch_delete_rows @rs.collect {|r| {'_id' => r['_id']} }
+    assert @t.rows.size == 0
   end
-end
 
-class VeritableTestUtils < Test::Unit::TestCase
-  def test_query_params
-    [[{'foo' => 'bar', 'baz' => 2}, "foo=bar&baz=2"],
-     [{'foo' => [1,2,3]}, "foo[]=1&foo[]=2&foo[]=3"],
-     [{'foo' => {'a' => 1, 'b' => 2}}, "foo[a]=1&foo[b]=2"],
-     [{'foo' => {'a' => 1, 'b' => [1,2,3]}}, "foo[a]=1&foo[b][]=1&foo[b][]=2&foo[b][]=3"]].each {|x|
-      assert Veritable::Util.query_params(x[0]) == x[1]
-    }
+  def test_batch_delete_rows_some_deleted
+    @rs << {'_id' => 'spurious'}
+    @t.batch_delete_rows @rs
+    assert @t.rows.size == 0
   end
+
+  def test_batch_delete_rows_faulty
+    rs = [{'zim' => 'zam', 'wos' => 9.3},
+          {'zim' => 'zop', 'wos' => 18.9}] + @rs
+    assert_raise(VeritableError) {@t.batch_delete_rows rs}
+  end
+
+  def test_get_analyses
+  end
+
+  def test_create_analysis_1
+  end
+
+  def test_create_analysis_2
+  end
+
+  def test_create_analysis_id_json_roundtrip
+  end
+
+  def test_create_analysis_invalid_id
+  end
+
+  def test_create_duplicate_analysis
+  end
+
+  def test_create_analyses_malformed_schemata
+  end
+
+  def test_create_analysis_unpossible_type
+  end
+
+  def test_wait_for_analysis_succeeds
+  end
+
+  def test_wait_for_analysis_fails
+  end
+
+  def test_error_analysis_failed
+  end
+
+  def test_create_analysis_all_datatypes
+  end
+
+  def test_create_analyses_datatype_mismatches
+  end
+
+  def get_created_analyses
+  end
+
+  def get_missing_analysis_fails
+  end
+
+  def test_delete_analysis
+  end
+
+  def test_get_analysis_schema
+  end
+
 end
