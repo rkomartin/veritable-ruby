@@ -92,7 +92,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def test_get_analyses
-    a = @t.create_analysis(@schema, description="An analysis", force=true)
+    a = @t.create_analysis(@schema)
     tid = a._id
     @t.create_analysis(@schema, analysis_id="zubble_1", description="An analysis", force=true)
     @t.create_analysis(@schema, analysis_id="zubble_2", description="An analysis", force=true)
@@ -176,12 +176,12 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_delete_analysis
     a = @t2.create_analysis(@schema2)
     a.delete
-    assert(not(@t2.has_analysis?(a._id)))
+    assert_false @t2.has_analysis?(a._id)
     a.delete
-    assert(not(@t2.has_analysis?(a._id)))
+    assert_false @t2.has_analysis?(a._id)
     a = @t2.create_analysis(@schema2)
     @t2.delete_analysis a._id
-    assert(not(@t2.has_analysis?(a._id)))
+    assert_false @t2.has_analysis?(a._id)
 
   end
 
