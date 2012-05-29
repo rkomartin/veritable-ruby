@@ -63,6 +63,45 @@ module Veritable
         end
       end
 
+      def split_rows(rows, frac=0.5)
+        rows = rows.to_a
+        n = rows.size
+        inds = 0...n
+        inds.shuffle!
+        border_ind = (n * frac).floor.to_i
+        train_dataset = (0...border_ind).collect {|i| rows[inds[i]] }
+        test_dataset = (border_ind...n).collect {|i| rows[inds[i]] }
+        return train_dataset, test_dataset
+      end
+
+      def validate_schema(schema)
+        schema.is_a? Veritable::Schema ? schema.validate : Veritable::Schema.new(schema).validate
+      end
+
+      def make_schema(schema_rule, opts={})
+        # construct an analysis schema from a schema rule (a list of lists)
+      end
+
+      def write_csv(rows, filename)
+        # writes an Array of Hashes to disk as a .csv
+      end
+
+      def read_csv(filename, id_col=nil)
+        # reads a .csv into an Array of Hashes
+      end
+
+      def clean_data(rows, schema, opts={})
+      end
+
+      def validate_data(rows, schema)
+      end
+
+      def clean_predictions(predictions, schema, opts={})
+      end
+
+      def validate_predictions(predictions, schema)
+      end
+
       private
 
       def flatten_params(params, parent=nil)
@@ -91,6 +130,11 @@ module Veritable
       def urlencode(k)
         URI.escape(k.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
+
+      def validate(rows, schema, opts)
+        validate_schema schema  
+      end
+
     end
   end
 end
