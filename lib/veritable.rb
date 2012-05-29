@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'openssl'
-require 'json'
 
 require 'veritable/api'
 require 'veritable/connection'
