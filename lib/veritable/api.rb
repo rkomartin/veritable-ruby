@@ -1,4 +1,5 @@
 require 'veritable/cursor'
+require 'veritable/datatypes'
 require 'veritable/errors'
 require 'veritable/resource'
 require 'veritable/util'
@@ -90,7 +91,7 @@ module Veritable
       begin
         batch_modify_rows('delete', rows, per_page)
       rescue VeritableError => e
-        if not e.respond_to? :http_code or not e.http_code == "404 Resource Not Found"
+        if (not e.respond_to?(:http_code)) or (not (e.http_code == "404 Resource Not Found"))
           raise e
         end 
       end
@@ -283,7 +284,19 @@ class Schema < Hash
   end
 
   def validate
-#      FIXME
+    self.each {|k, v|
+      if not k.is_a? String
+        begin
+          k.to_s
+        rescue
+          raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id.")
+        else
+          raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id #{k}")
+        end
+      end
+
+      # FIXME
+    }
   end
 end
 
