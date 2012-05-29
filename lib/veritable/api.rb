@@ -126,7 +126,7 @@ module Veritable
         Util.check_id analysis_id
       end
 
-      if has_table? analysis_id
+      if has_analysis? analysis_id
         if autogen
           return create_analysis(nil, description, false)
         end
@@ -136,8 +136,8 @@ module Veritable
           delete_table table_id
         end
       end
-      doc = post("tables", {:_id => table_id, :description => description})
-      Table.new(@opts, doc)
+      doc = post(link('analyses'), {:_id => analysis_id, :description => description, :type => analysis_type, :schema => schema})
+      Analysis.new(@opts, doc)
 
     end
 
