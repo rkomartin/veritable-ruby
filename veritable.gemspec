@@ -8,7 +8,7 @@ Gem::Specification.new do |gem|
   gem.summary       = "Ruby client for Veritable API"
   gem.homepage      = "https://dev.priorknowledge.com"
 
-  gem.files         = Dir["**/*"].select { |d| d =~ %r{^(README.md|LICENSE|lib/)} }
+  gem.files         = Dir["**/*"].select { |d| d =~ %r{^(README.md|LICENSE|CHANGELOG.txt|lib/)} }
   gem.name          = "veritable"
   gem.require_paths = %w{lib}
   gem.version       = Veritable::VERSION
