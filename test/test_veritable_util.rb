@@ -1,3 +1,5 @@
+require 'test/unit'
+
 class VeritableTestUtils < Test::Unit::TestCase
   def test_query_params
     [[{'foo' => 'bar', 'baz' => 2}, "foo=bar&baz=2"],
