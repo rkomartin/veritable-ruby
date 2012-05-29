@@ -16,7 +16,6 @@ require 'uuid'
 gem "multi_json"
 require 'multi_json'
 
-
 module Veritable
   USER_AGENT = 'veritable-ruby ' + VERSION
   
