@@ -83,7 +83,7 @@ class VeritableRowOpTest < Test::Unit::TestCase
     rs = (1..10000).collect {|i|
         {'_id' => "r" + i.to_s, 'zim' => 'zop', 'wos' => rand, 'fop' => rand(1000)}
     }
-    [0, -5, 2.31, "foo", False].each {|pp|
+    [0, -5, 2.31, "foo", false].each {|pp|
       assert_raise(VeritableError, "Failed on #{pp}") {@t.batch_upload_rows(rs, pp)}
     }
   end

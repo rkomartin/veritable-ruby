@@ -17,7 +17,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
        {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
        {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9}
       ]
-    @t.batch_upload_rows rs
+    @t.batch_upload_rows @rs
     @t2 = @api.create_table
     @t2.batch_upload_rows(
       [{'_id' => 'row1', 'cat' => 'a', 'ct' => 0, 'real' => 1.02394, 'bool' => true},
@@ -27,6 +27,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
        {'_id' => 'row5', 'cat' => 'd', 'ct' => 2, 'real' => 1.14561, 'bool' => false},
        {'_id' => 'row6', 'cat' => 'a', 'ct' => 5, 'real' => 1.03412, 'bool' => false}
       ])
+    @schema = Veritable::Schema.new({'zim' => {'type' => 'categorical'}, 'wos' => {'type' => 'real'}})
+    @schema2 = Veritable::Schema.new({'cat' => {'type' => 'categorical'}, 'ct' => {'type' => 'count'}, 'real' => {'type' => 'real'}, 'bool' => {'type' => 'boolean'}})
   end
 
   def teardown
@@ -69,76 +71,123 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def test_batch_delete_rows
-    assert @t.rows.size == @rs.size
+    assert @t.rows.to_a.size == @rs.size
     @t.batch_delete_rows @rs
-    assert @t.rows.size == 0
+    assert @t.rows.to_a.size == 0
     @t.batch_upload_rows @rs
-    assert @t.rows.size == @rs.size
+    assert @t.rows.to_a.size == @rs.size
     @t.batch_delete_rows @rs.collect {|r| {'_id' => r['_id']} }
-    assert @t.rows.size == 0
+    assert @t.rows.to_a.size == 0
   end
 
   def test_batch_delete_rows_some_deleted
     @rs << {'_id' => 'spurious'}
     @t.batch_delete_rows @rs
-    assert @t.rows.size == 0
+    assert @t.rows.to_a.size == 0
   end
 
   def test_batch_delete_rows_faulty
-    rs = [{'zim' => 'zam', 'wos' => 9.3},
-          {'zim' => 'zop', 'wos' => 18.9}] + @rs
+    rs = [{'zim' => 'zam', 'wos' => 9.3}, {'zim' => 'zop', 'wos' => 18.9}] + @rs
     assert_raise(VeritableError) {@t.batch_delete_rows rs}
   end
 
   def test_get_analyses
-  end
-
-  def test_create_analysis_1
-  end
-
-  def test_create_analysis_2
+    a = @t.create_analysis(@schema, description="An analysis", force=true)
+    tid = a._id
+    @t.create_analysis(@schema, analysis_id="zubble_1", description="An analysis", force=true)
+    @t.create_analysis(@schema, analysis_id="zubble_2", description="An analysis", force=true)
+    analyses = @t.analyses.to_a
+    assert analyses.to_a.size == 3
+    analyses.each {|a|
+      assert a.is_a? Veritable::Analysis
+    }
+    assert @t.has_analysis? 'zubble_1'
+    assert @t.has_analysis? tid
+    assert @t.analysis('zubble_1').is_a? Veritable::Analysis
+    assert @t.analysis(tid).is_a? Veritable::Analysis
   end
 
   def test_create_analysis_id_json_roundtrip
+    id = MultiJson.decode(MultiJson.encode({'id' => 'zubble_2'}))['id']
+    @t.create_analysis(@schema, analysis_id=id, description="An analysis", force=true)
+    assert @t.analysis('zubble_2').is_a? Veritable::Analysis
   end
 
   def test_create_analysis_invalid_id
+    INVALIDS.each {|tid|
+      assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id=tid)}
+    }
   end
 
   def test_create_duplicate_analysis
+    @t.create_analysis(@schema, analysis_id="foo")
+    assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id="foo")}
+    @t.create_analysis(@schema, analysis_id="foo", description = "", force=true)
   end
 
   def test_create_analyses_malformed_schemata
+    [{'zim' => {'type' => 'generalized_wishart_process'}, 'wos' => {'type' => 'ibp'}},
+     'wimmel', {}, ['categorical', 'real'], true, false, 3, 3.143,
+     {'zim' => {'type' => 'categorical'}, 'wos' => {'type' => 'real'}, 'krob' => {'type' => 'count'}}
+    ].each {|s| assert_raise(VeritableError) {
+      s = Veritable::Schema.new(s)
+      @t.create_analysis(s) } }
   end
 
   def test_create_analysis_unpossible_type
+    assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id="failing", description="should fail", force=true, analysis_type="svm")}
   end
 
-  def test_wait_for_analysis_succeeds
-  end
-
-  def test_wait_for_analysis_fails
-  end
-
-  def test_error_analysis_failed
+  def test_wait_for_analysis
+    a = @t.create_analysis(@schema)
+    a.wait
+    assert a.state == 'succeeded'
+    s = Veritable::Schema.new({'zim' => {'type' => 'boolean'}, 'wos' => {'type' => 'real'}})
+    a = @t.create_analysis(s)
+    a.wait
+    assert a.state == 'failed'
+    assert a.error.is_a? String
   end
 
   def test_create_analysis_all_datatypes
+    a = @t2.create_analysis(@schema2)
+    a.wait
+    assert a.state == 'succeeded'
+    assert a.created_at.is_a? String
+    assert a.finished_at.is_a? String
   end
 
   def test_create_analyses_datatype_mismatches
-  end
-
-  def get_created_analyses
+    {'cat' => 'real', 'cat' => 'count', 'cat' => 'boolean',
+     'bool' => 'real', 'bool' => 'count', 'real' => 'count',
+     'real' => 'categorical', 'real' => 'boolean', 'ct' => 'boolean',
+     'ct' => 'categorical'}.each {|k, v|
+      @schema2[k]['type'] = v
+      a = @t2.create_analysis(@schema2)
+      a.wait
+      assert a.state == 'failed'
+     }
   end
 
   def get_missing_analysis_fails
+    assert_raise(VeritableError) {@t2.analysis 'yummy_tummy'}
   end
 
   def test_delete_analysis
+    a = @t2.create_analysis(@schema2)
+    a.delete
+    assert(not(@t2.has_analysis?(a._id)))
+    a.delete
+    assert(not(@t2.has_analysis?(a._id)))
+    a = @t2.create_analysis(@schema2)
+    @t2.delete_analysis a._id
+    assert(not(@t2.has_analysis?(a._id)))
+
   end
 
   def test_get_analysis_schema
+    a = @t2.create_analysis(@schema2)
+    s = a.schema
+    assert s == @schema2
   end
-
 end
