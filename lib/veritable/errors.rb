@@ -5,9 +5,11 @@ class VeritableError < StandardError
     if opts.is_a? Hash
       @opts = opts
       @opts.keys.each {|k|
-        self.send(:define_singleton_method, k.to_sym) {
-          @opts[k]
-        }
+        class << self
+          self.send(:define_method, k.to_sym) {
+            @opts[k]
+          }
+        end
       }
     end
   end
