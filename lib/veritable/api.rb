@@ -131,9 +131,9 @@ module Veritable
           return create_analysis(nil, description, false)
         end
         if ! force
-          raise VeritableError.new("Couldn't create table -- table with id #{table_id} already exists.")
+          raise VeritableError.new("Couldn't create table -- table with id #{analysis_id} already exists.")
         else
-          delete_table table_id
+          delete_table analysis_id
         end
       end
       doc = post(link('analyses'), {:_id => analysis_id, :description => description, :type => analysis_type, :schema => schema})
