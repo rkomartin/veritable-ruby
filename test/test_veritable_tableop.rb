@@ -94,8 +94,11 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_get_analyses
     a = @t.create_analysis(@schema)
     tid = a._id
-    @t.create_analysis(@schema, analysis_id="zubble_1", description="An analysis", force=true)
-    @t.create_analysis(@schema, analysis_id="zubble_2", description="An analysis", force=true)
+    a.wait
+    b = @t.create_analysis(@schema, analysis_id="zubble_1", description="An analysis", force=true)
+    b.wait
+    c = @t.create_analysis(@schema, analysis_id="zubble_2", description="An analysis", force=true)
+    c.wait
     analyses = @t.analyses.to_a
     assert analyses.to_a.size == 3
     analyses.each {|a|
@@ -105,6 +108,11 @@ class VeritableTableOpTest < Test::Unit::TestCase
     assert @t.has_analysis? tid
     assert @t.analysis('zubble_1').is_a? Veritable::Analysis
     assert @t.analysis(tid).is_a? Veritable::Analysis
+  end
+
+  def test_multiple_running_analyses_fail
+    @t.create_analysis(@schema)
+    assert_raise(VeritableError) { @t.create_analysis(@schema) }
   end
 
   def test_create_analysis_id_json_roundtrip
