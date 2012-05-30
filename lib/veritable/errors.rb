@@ -5,9 +5,9 @@ class VeritableError < StandardError
     if opts.is_a? Hash
       @opts = opts
       class << self
-        @opts.keys.each {|k|
+        opts.keys.each {|k|
           self.send(:define_method, k.to_sym) {
-            @opts[k]
+            opts[k]
           }
         }
       end
