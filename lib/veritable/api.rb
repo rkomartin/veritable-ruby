@@ -267,16 +267,25 @@ module Veritable
 
 class Schema < Hash
   def initialize(data, subset=nil)
-    # FIXME do some validation on initialize
-    data.each {|k, v|
-      if subset.is_a? Array
-        self[k] = v if subset.include? k
-      elsif subset.is_a? Hash
-        self[k] = v if subset.has_key? k
+    begin
+      data.each {|k, v|
+        if subset.is_a? Array
+          self[k] = v if subset.include? k
+        elsif subset.is_a? Hash
+          self[k] = v if subset.has_key? k
+        else
+          self[k] = v
+        end
+      }
+    rescue
+      begin
+        data.to_s
+      rescue
+        raise VeritableError.new("Initialize schema -- invalid schema data.")
       else
-        self[k] = v
+        raise VeritableError.new("Initialize schema -- invalid schema data #{data}.")
       end
-    }
+    end
   end
 
   def type(column)
