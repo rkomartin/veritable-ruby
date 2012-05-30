@@ -128,7 +128,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def test_create_duplicate_analysis
-    @t.create_analysis(@schema, analysis_id="foo")
+    a = @t.create_analysis(@schema, analysis_id="foo")
+    a.wait
     assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id="foo")}
     @t.create_analysis(@schema, analysis_id="foo", description = "", force=true)
   end
@@ -154,7 +155,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
     a = @t.create_analysis(s)
     a.wait
     assert a.state == 'failed'
-    assert a.error.is_a? String
+    assert a.error.is_a? Hash
+    assert a.error['code'] == 'ANALYSIS_SCHEMA_INVALID_TYPE_FOR_COLUMN'
   end
 
   def test_create_analysis_all_datatypes
@@ -174,6 +176,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
       a = @t2.create_analysis(@schema2)
       a.wait
       assert a.state == 'failed'
+      assert a.error.is_a? Hash
+      assert a.error['code'] == 'ANALYSIS_SCHEMA_INVALID_TYPE_FOR_COLUMN'
      }
   end
 
@@ -184,12 +188,12 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_delete_analysis
     a = @t2.create_analysis(@schema2)
     a.delete
-    assert not @t2.has_analysis?(a._id)
+    assert ! @t2.has_analysis?(a._id)
     a.delete
-    assert not @t2.has_analysis?(a._id)
+    assert ! @t2.has_analysis?(a._id)
     a = @t2.create_analysis(@schema2)
     @t2.delete_analysis a._id
-    assert not @t2.has_analysis?(a._id)
+    assert ! @t2.has_analysis?(a._id)
 
   end
 
