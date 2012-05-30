@@ -18,11 +18,12 @@ module Veritable
     end
 
     def each
+      i = limit if limit
       loop do
         if data.length > 0 or refresh > 0
           if limit
-            raise StopIteration if limit == 0
-            limit -= 1
+            raise StopIteration if i == 0
+            i = i - 1
           end
           if lazymap
             yield lazymap.call(data.shift)

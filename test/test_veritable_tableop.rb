@@ -58,10 +58,15 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_batch_get_rows_limits
     [[{'start' => 'onebug', 'limit' => 0}, 0],
      [{'start' => 'onebug', 'limit' => 3}, 3],
-     [{'start' => 'onebug', 'limit' => 100}, 4],
-     [{'start' => 'row0'}, 6],
+     [{'start' => 'onebug', 'limit' => 100}, 4]
+   ].each {|test| 
+      assert (@t.rows(test[0]).count == test[1])
+    }
+    [[{'start' => 'row0'}, 6],
      [{'start' => 'row7'}, 0]
-   ].each {|test| assert(@t.rows(test[0]).count == test[1], "Failed on #{test[0]}")}
+    ].each {|test| 
+      assert (@t2.rows(test[0]).count == test[1])
+    }
   end
 
   def test_delete_row
