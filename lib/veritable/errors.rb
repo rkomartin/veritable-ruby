@@ -4,13 +4,12 @@ class VeritableError < StandardError
     @message = message
     if opts.is_a? Hash
       @opts = opts
-      class << self
-        opts.keys.each {|k|
-          self.send(:define_method, k.to_sym) {
-            opts[k]
-          }
+      eigenclass = class << obj; self; end
+      @opts.keys.each {|k|
+        eigenclass.send(:define_method, k.to_sym) {
+          @opts[k]
         }
-      end
+      }
     end
   end
   def to_s; message; end
