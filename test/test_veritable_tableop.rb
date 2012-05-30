@@ -56,12 +56,17 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def test_batch_get_rows_limits
-    {{'start' => 'onebug', 'limit' => 0} => 0,
-     {'start' => 'onebug', 'limit' => 3} => 3,
-     {'start' => 'onebug', 'limit' => 100} => 4,
-     {'start' => 'row0'} => 6,
-     {'start' => 'row7'} => 0
-   }.each {|r, c| assert(@t.rows(r).count == c, "Failed on #{r}")}
+    [[{'start' => 'onebug', 'limit' => 0}, 0],
+     [{'start' => 'onebug', 'limit' => 3}, 3],
+     [{'start' => 'onebug', 'limit' => 100}, 4]
+   ].each {|test| 
+      assert (@t.rows(test[0]).count == test[1])
+    }
+    [[{'start' => 'row0'}, 6],
+     [{'start' => 'row7'}, 0]
+    ].each {|test| 
+      assert (@t2.rows(test[0]).count == test[1])
+    }
   end
 
   def test_delete_row
@@ -92,10 +97,13 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def test_get_analyses
-    a = @t.create_analysis(@schema, description="An analysis", force=true)
+    a = @t.create_analysis(@schema)
     tid = a._id
-    @t.create_analysis(@schema, analysis_id="zubble_1", description="An analysis", force=true)
-    @t.create_analysis(@schema, analysis_id="zubble_2", description="An analysis", force=true)
+    a.wait
+    b = @t.create_analysis(@schema, analysis_id="zubble_1", description="An analysis", force=true)
+    b.wait
+    c = @t.create_analysis(@schema, analysis_id="zubble_2", description="An analysis", force=true)
+    c.wait
     analyses = @t.analyses.to_a
     assert analyses.to_a.size == 3
     analyses.each {|a|
@@ -105,6 +113,11 @@ class VeritableTableOpTest < Test::Unit::TestCase
     assert @t.has_analysis? tid
     assert @t.analysis('zubble_1').is_a? Veritable::Analysis
     assert @t.analysis(tid).is_a? Veritable::Analysis
+  end
+
+  def test_multiple_running_analyses_fail
+    @t.create_analysis(@schema)
+    assert_raise(VeritableError) { @t.create_analysis(@schema) }
   end
 
   def test_create_analysis_id_json_roundtrip
@@ -120,7 +133,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def test_create_duplicate_analysis
-    @t.create_analysis(@schema, analysis_id="foo")
+    a = @t.create_analysis(@schema, analysis_id="foo")
+    a.wait
     assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id="foo")}
     @t.create_analysis(@schema, analysis_id="foo", description = "", force=true)
   end
@@ -146,7 +160,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
     a = @t.create_analysis(s)
     a.wait
     assert a.state == 'failed'
-    assert a.error.is_a? String
+    assert a.error.is_a? Hash
+    assert a.error['code'] == 'ANALYSIS_SCHEMA_INVALID_TYPE_FOR_COLUMN'
   end
 
   def test_create_analysis_all_datatypes
@@ -154,7 +169,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
     a.wait
     assert a.state == 'succeeded'
     assert a.created_at.is_a? String
-    assert a.finished_at.is_a? String
+    # assert a.finished_at.is_a? String
   end
 
   def test_create_analyses_datatype_mismatches
@@ -166,6 +181,8 @@ class VeritableTableOpTest < Test::Unit::TestCase
       a = @t2.create_analysis(@schema2)
       a.wait
       assert a.state == 'failed'
+      assert a.error.is_a? Hash
+      assert a.error['code'] == 'ANALYSIS_SCHEMA_INVALID_TYPE_FOR_COLUMN'
      }
   end
 
@@ -176,12 +193,12 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_delete_analysis
     a = @t2.create_analysis(@schema2)
     a.delete
-    assert(not(@t2.has_analysis?(a._id)))
+    assert ! @t2.has_analysis?(a._id)
     a.delete
-    assert(not(@t2.has_analysis?(a._id)))
+    assert ! @t2.has_analysis?(a._id)
     a = @t2.create_analysis(@schema2)
     @t2.delete_analysis a._id
-    assert(not(@t2.has_analysis?(a._id)))
+    assert ! @t2.has_analysis?(a._id)
 
   end
 

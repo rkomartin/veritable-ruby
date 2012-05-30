@@ -4,8 +4,9 @@ class VeritableError < StandardError
     @message = message
     if opts.is_a? Hash
       @opts = opts
+      eigenclass = class << self; self; end
       @opts.keys.each {|k|
-        self.class.send(:define_singleton_method, k.to_sym) {
+        eigenclass.send(:define_method, k.to_sym) {
           @opts[k]
         }
       }

@@ -84,7 +84,7 @@ module Veritable
     end
 
     def delete_row(row_id)
-      rest_delete "#{link('rows')}/row_id"
+      rest_delete "#{link('rows')}/#{row_id}"
     end
 
     def batch_delete_rows(rows, per_page=100)
@@ -106,7 +106,7 @@ module Veritable
     end
 
     def delete_analysis(analysis_id)
-      delete "#{link('analyses')}/analysis_id"
+      rest_delete "#{link('analyses')}/#{analysis_id}"
     end
 
     def create_analysis(schema, analysis_id=nil, description="", force=false, analysis_type="veritable")
@@ -126,18 +126,18 @@ module Veritable
         Util.check_id analysis_id
       end
 
-      if has_table? analysis_id
+      if has_analysis? analysis_id
         if autogen
           return create_analysis(nil, description, false)
         end
         if ! force
-          raise VeritableError.new("Couldn't create table -- table with id #{table_id} already exists.")
+          raise VeritableError.new("Couldn't create table -- table with id #{analysis_id} already exists.")
         else
-          delete_table table_id
+          delete_analysis analysis_id
         end
       end
-      doc = post("tables", {:_id => table_id, :description => description})
-      Table.new(@opts, doc)
+      doc = post(link('analyses'), {:_id => analysis_id, :description => description, :type => analysis_type, :schema => schema})
+      Analysis.new(@opts, doc)
 
     end
 
@@ -267,16 +267,25 @@ module Veritable
 
 class Schema < Hash
   def initialize(data, subset=nil)
-    # FIXME do some validation on initialize
-    data.each {|k, v|
-      if subset.is_a? Array
-        self[k] = v if subset.include? k
-      elsif subset.is_a? Hash
-        self[k] = v if subset.has_key? k
+    begin
+      data.each {|k, v|
+        if subset.is_a? Array
+          self[k] = v if subset.include? k
+        elsif subset.is_a? Hash
+          self[k] = v if subset.has_key? k
+        else
+          self[k] = v
+        end
+      }
+    rescue
+      begin
+        data.to_s
+      rescue
+        raise VeritableError.new("Initialize schema -- invalid schema data.")
       else
-        self[k] = v
+        raise VeritableError.new("Initialize schema -- invalid schema data #{data}.")
       end
-    }
+    end
   end
 
   def type(column)
