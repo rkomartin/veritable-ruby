@@ -184,12 +184,12 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_delete_analysis
     a = @t2.create_analysis(@schema2)
     a.delete
-    assert_false @t2.has_analysis?(a._id)
+    assert not @t2.has_analysis?(a._id)
     a.delete
-    assert_false @t2.has_analysis?(a._id)
+    assert not @t2.has_analysis?(a._id)
     a = @t2.create_analysis(@schema2)
     @t2.delete_analysis a._id
-    assert_false @t2.has_analysis?(a._id)
+    assert not @t2.has_analysis?(a._id)
 
   end
 
