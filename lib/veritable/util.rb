@@ -24,7 +24,7 @@ module Veritable
           else
             raise VeritableError.new("Invalid id '#{id}' -- strings only.")
           end
-        elsif not id =~ Regexp.new('\A[-_a-zA-Z0-9]+\z')
+        elsif not id =~ Regexp.new('\A[a-zA-Z0-9][-_a-zA-Z0-9]*\z')
           raise VeritableError.new("Invalid id '#{id}' -- must contain only alphanumerics, underscores, and dashes.")
         elsif id[0] == '_' or id[0] == '-'
           raise VeritableError.new("Invalid id '#{id}' -- may not begin with a dash or underscore.")
