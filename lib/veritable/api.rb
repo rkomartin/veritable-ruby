@@ -84,7 +84,7 @@ module Veritable
     end
 
     def delete_row(row_id)
-      rest_delete "#{link('rows')}/row_id"
+      rest_delete "#{link('rows')}/#{row_id}"
     end
 
     def batch_delete_rows(rows, per_page=100)
