@@ -106,7 +106,7 @@ module Veritable
     end
 
     def delete_analysis(analysis_id)
-      delete "#{link('analyses')}/analysis_id"
+      rest_delete "#{link('analyses')}/analysis_id"
     end
 
     def create_analysis(schema, analysis_id=nil, description="", force=false, analysis_type="veritable")
