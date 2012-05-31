@@ -2,6 +2,8 @@ require 'veritable/datatypes'
 require 'veritable/errors'
 require 'uuid'
 require 'uri'
+require 'csv'
+require 'set'
 
 module Veritable
   module Util
@@ -83,13 +85,32 @@ module Veritable
       end
 
       def write_csv(rows, filename)
-        # writes an Array of Hashes to disk as a .csv
+        headers = Set.new
+        rows.each {|row| headers.merge(row.keys)}
+        headers = headers.to_a.sort
+        CSV.open(filename, "w") do |csv|
+          csv << headers
+          rows.each do |row|
+            out_row = headers.collect {|h| row.keys.include?(h) ? row[h] : ''}
+            csv << out_row
+          end
+        end
       end
 
-      def read_csv(filename, id_col=nil)
-        # reads a .csv into an Array of Hashes
+      def read_csv(filename, id_col='_id', na_vals=[''])
+        rows = CSV.read(filename)
+        header = rows.shift
+        header = header.collect {|h| (h == id_col ? '_id' : h).strip}
+        rows = rows.collect do |raw_row|
+          row = {}
+          (0...raw_row.length).each do |i|
+            row[header[i]] = ( na_vals.include?(raw_row[i]) ? nil : raw_row[i] )
+          end
+          row
+        end
+        return rows
       end
-
+      
       def clean_data(rows, schema, opts={})
       end
 
