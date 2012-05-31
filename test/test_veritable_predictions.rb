@@ -83,10 +83,10 @@ end
 
 class VeritablePredictionClassTest < Test::Unit::TestCase
   def setup
-    @request = {'ColInt' => nil, 'ColFloat' => nil, 'ColCat' => nil, 'ColBool' => nil}
-    @schema = {'ColInt' => {'type' => 'count'}, 'ColFloat' => {'type' => 'real'},
+    request = {'ColInt' => nil, 'ColFloat' => nil, 'ColCat' => nil, 'ColBool' => nil}
+    schema = {'ColInt' => {'type' => 'count'}, 'ColFloat' => {'type' => 'real'},
       'ColCat' => {'type' => 'categorical'}, 'ColBool' => {'type' => 'boolean'}}
-    @distribution = [
+    distribution = [
       {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => false},
       {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false},
       {'ColInt' => 8, 'ColFloat' => 8.1, 'ColCat' => 'b', 'ColBool' => false},
