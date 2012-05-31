@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+require 'multi_json'
 require 'test/unit'
 require 'veritable'
 
