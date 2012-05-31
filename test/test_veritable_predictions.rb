@@ -76,3 +76,52 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     @t2.delete
   end
 end
+
+class VeritablePredictionClassTest < Test::Unit::TestCase
+  def setup
+    @request = {'ColInt' => nil, 'ColFloat' => nil, 'ColCat' => nil, 'ColBool' => nil}
+    @schema = {'ColInt' => {'type' => 'count'}, 'ColFloat' => {'type' => 'real'},
+      'ColCat' => {'type' => 'categorical'}, 'ColBool' => {'type' => 'boolean'}}
+    @distribution = [
+      {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => false},
+      {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false},
+      {'ColInt' => 8, 'ColFloat' => 8.1, 'ColCat' => 'b', 'ColBool' => false},
+      {'ColInt' => 11, 'ColFloat' => 2.1, 'ColCat' => 'c', 'ColBool' => true}
+    ]
+    @testpreds = Veritable::Prediction.new request, distribution, schema
+    @testpreds2 = Veritable::Prediction.new MultiJson.decode(MultiJson.encode(request)), MultiJson.decode(MultiJson.encode(distribution)), MultiJson.decode(MultiJson.encode(schema))
+  end
+
+  def test_prediction_class
+    module Boolean; end
+    class TrueClass; include Boolean; end
+    class FalseClass; include Boolean; end
+
+    tolerance = 0.001
+
+    [@testpreds, @testpreds2].each {|tp|
+      {'ColInt' => [Fixnum, :equal, ((3 + 4 + 8 + 11) / 4.0).round.to_i, 8, [5, 9], 0.25, [3, 11], 0.60, [4, 8]],
+       'ColFloat' => [Float, :approximate, 4.35, 6, [5,9], 0.25, [2.1, 8.1], 0.60, [3.1, 4.1]],
+       'ColCat' => [String, :equal, 'b', 0.5, ['b', 'c'], 0.75, {'b' => 0.5}, 0.10, {'a' => 0.25, 'b' => 0.5, 'c' => 0.25},
+       'ColBool' => [Boolean, :equal, false, 0.25, [true], 0.25, {false => 0.75}, 0.10, {true => 0.25, false => 0.75}]
+      }.each {|k, v|
+        expected = tp[k]
+        uncertainty = tp.uncertainty[k]
+        assert expected.is_a? v[0]
+        if v[1] == :equal
+          assert expected == v[2]
+        elsif v[1] == :approximate
+          assert (expected - v[2]).abs < tolerance
+        else
+          raise Exception
+        end
+        p_within = tp.prob_within(k, v[3])
+        assert (p_within - v[4]).abs < tolerance
+        c_values = tp.credible_values(k)
+        assert c_values == v[5]
+        c_values = tp.credible_values(k, p=v[6])
+        assert c_values = v[7]
+      }
+    }
+  end
+end
