@@ -107,20 +107,20 @@ class VeritablePredictionClassTest < Test::Unit::TestCase
       }.each {|k, v|
         expected = tp[k]
         uncertainty = tp.uncertainty[k]
-        assert expected.is_a? v[0]
+        assert(expected.is_a?(v[0]), "Failed on #{k}, expected value is of class #{expected.class}, not #{v[0]}")
         if v[1] == :equal
-          assert expected == v[2]
+          assert(expected == v[2], "Failed on #{k}, expected value is #{expected}, not equal to #{v[2]}")
         elsif v[1] == :approximate
-          assert (expected - v[2]).abs < tolerance
+          assert((expected - v[2]).abs < tolerance, "Failed on #{k}, expected value is #{expected}, not within #{tolerance} of #{v[2]}")
         else
-          raise Exception
+          raise Exception.new
         end
         p_within = tp.prob_within(k, v[3])
-        assert (p_within - v[4]).abs < tolerance
+        assert((p_within - v[4]).abs < tolerance, "Failed on #{k}, probability within #{v[3]} is #{p_within}, not within #{tolerance} of #{v[4]}")
         c_values = tp.credible_values(k)
-        assert c_values == v[5]
+        assert(c_values == v[5], "Failed on #{k}, credible values are not equal to #{v[5]}")
         c_values = tp.credible_values(k, p=v[6])
-        assert c_values = v[7]
+        assert(c_values = v[7], "Failed on #{k}, credible values within #{v[6]} are not equal to #{v[7]}")
       }
     }
   end
