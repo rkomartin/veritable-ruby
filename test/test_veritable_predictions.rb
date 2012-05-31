@@ -16,7 +16,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
       {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
       {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9}
     ]
-    @s1 = Schema.new({'zim': {'type': 'categorical'}, 'wos': {'type': 'real'}})
+    @s1 = Schema.new({'zim' => {'type' => 'categorical'}, 'wos' => {'type' => 'real'}})
     @a1 = @t.create_analysis @s1
 
     @t2 = @api.create_table
@@ -29,10 +29,10 @@ class VeritablePredictionsTest < Test::Unit::TestCase
       {'_id' => 'row6', 'cat' => 'a', 'ct' => 5, 'real' => 1.03412, 'bool' => false}
     ]
     @s2 = Schema.new({
-      'cat': {'type': 'categorical'},
-      'ct': {'type': 'count'},
-      'real': {'type': 'real'},
-      'bool': {'type': 'boolean'}
+      'cat' => {'type' => 'categorical'},
+      'ct' => {'type' => 'count'},
+      'real' => {'type' => 'real'},
+      'bool' => {'type' => 'boolean'}
     })
     @a2 = @t2.create_analysis @s2
   end
