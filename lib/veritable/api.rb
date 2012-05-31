@@ -303,8 +303,17 @@ class Schema < Hash
           raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id #{k}")
         end
       end
-
-      # FIXME
+      begin
+        check_id k
+      rescue
+        raise VeritableError.new("Validate schema -- Invalid column name #{k}: must contain only alphanumerics, dashes, and underscores, and may not begin with a dash or underscore.")
+      end
+      if not v.include? 'type'
+        raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k} must specify a 'type', one of #{DATATYPES}")
+      end
+      if not DATATYPES.include? v['type']
+        raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k}, type #{v['type']} is not valid. Type must be one of #{DATATYPES}")
+      end
     }
   end
 end
@@ -323,7 +332,8 @@ end
 
       request.each { |k,v|
         if v.nil?
-          # FIXME
+          self[k] = point_estimate k
+          @uncertainty[k] = calculate_uncertainty k
         else
           self[k] = v
           @uncertainty[k] = 0.0

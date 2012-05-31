@@ -4,7 +4,7 @@ require 'tempfile'
 
 class VeritableTestUtils < Test::Unit::TestCase
 
-  def test_write_read_csv():
+  def test_write_read_csv
     file = Tempfile.new('vtest')
     file.close
     begin
