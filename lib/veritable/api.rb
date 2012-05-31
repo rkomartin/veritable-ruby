@@ -323,7 +323,8 @@ end
 
       request.each { |k,v|
         if v.nil?
-          # FIXME
+          self[k] = point_estimate k
+          @uncertainty[k] = calculate_uncertainty k
         else
           self[k] = v
           @uncertainty[k] = 0.0
