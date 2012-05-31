@@ -11,8 +11,12 @@ module Veritable
 
     def limits; get("user/limits"); end
 
-    def tables
-      Cursor.new({'collection' => "tables"}.update(@opts)) {|x| Table.new(@opts, x)}
+    def tables(opts={'start' => nil, 'limit' => nil})
+      Cursor.new({'collection' => "tables",
+        'start' => opts['start'],
+        'limit' => opts['limit']}.update(@opts)) {|x| Table.new(@opts, x)}
+    end
+
     end
 
     def table(table_id)
@@ -101,8 +105,10 @@ module Veritable
       Analysis.new(@opts, get("#{link('analyses')}/#{analysis_id}"))
     end
 
-    def analyses
-      Cursor.new({'collection' => link('analyses')}.update(@opts)) {|x| Analysis.new(@opts, x)}
+    def analyses(opts={'start' => nil, 'limit' => nil})
+      Cursor.new({'collection' => link('analyses'),
+        'start' => opts['start'],
+        'limit' => opts['limit']}.update(@opts)) {|x| Analysis.new(@opts, x)}
     end
 
     def delete_analysis(analysis_id)
