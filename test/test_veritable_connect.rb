@@ -25,15 +25,15 @@ class VeritableConnectTest < Test::Unit::TestCase
   end
 
   def test_connect_no_json_failes
-    assert_raise(MultiJson::DecodeError) { Veritable.connect({:api_url => "http://www.google.com"}) }
+    assert_raise(MultiJson::DecodeError) { Veritable.connect({:api_base_url => "http://www.google.com"}) }
   end
 
   def test_connect_not_api_fails
-    assert_raise(VeritableError) { Veritable.connect({:api_url => "https://graph.facebook.com/zuck"}) }
+    assert_raise(VeritableError) { Veritable.connect({:api_base_url => "https://graph.facebook.com/zuck"}) }
   end
 
   def test_instantiate_api
-    a =Veritable::API.new({:api_key =>"foo", :api_url =>"bar"})
+    a =Veritable::API.new({:api_key =>"foo", :api_base_url =>"bar"})
     assert a.is_a? Veritable::API
   end
 end
