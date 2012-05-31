@@ -4,6 +4,10 @@ require 'multi_json'
 require 'test/unit'
 require 'veritable'
 
+module Boolean; end
+class TrueClass; include Boolean; end
+class FalseClass; include Boolean; end
+
 class VeritablePredictionsTest < Test::Unit::TestCase
   def setup
     @api = Veritable.connect
@@ -93,10 +97,6 @@ class VeritablePredictionClassTest < Test::Unit::TestCase
   end
 
   def test_prediction_class
-    module Boolean; end
-    class TrueClass; include Boolean; end
-    class FalseClass; include Boolean; end
-
     tolerance = 0.001
 
     [@testpreds, @testpreds2].each {|tp|
