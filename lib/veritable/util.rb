@@ -180,13 +180,13 @@ module Veritable
           if opts['assign_ids']
             rows[i]['_id'] = i.to_s  # number the rows sequentially
           elsif opts['has_ids']
-            raise VeritableError("Validate -- row #{i} is missing key '_id'", {'row' => i, 'col' => '_id'}) unless r.include? '_id'
+            raise VeritableError.new("Validate -- row #{i} is missing key '_id'", {'row' => i, 'col' => '_id'}) unless r.include? '_id'
             
             if opts['convert_type'] # attempt to convert _id to string
               begin
                 rows[i]['_id'] = rows[i]['_id'].to_s if not rows[i]['_id'].is_a? String
               rescue
-                raise VeritableError("Validate -- row #{i}, key '_id' cannot be converted to string.", {'row' => i, 'col' => '_id'})
+                raise VeritableError.new("Validate -- row #{i}, key '_id' cannot be converted to string.", {'row' => i, 'col' => '_id'})
               end
             end
 
@@ -194,20 +194,20 @@ module Veritable
               begin
                 rows[i]['_id'].to_s
               rescue
-                raise VeritableError("Validate -- row #{i}, key '_id' is not a string.", {'row' => i, 'col' => '_id'})
+                raise VeritableError.new("Validate -- row #{i}, key '_id' is not a string.", {'row' => i, 'col' => '_id'})
               else
-                raise VeritableError("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is not a string.", {'row' => i, 'col' => '_id'})
+                raise VeritableError.new("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is not a string.", {'row' => i, 'col' => '_id'})
               end
             end
             
             begin
               check_id rows[i]['_id'] # make sure _id is alphanumeric
             rescue
-              raise VeritableError("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} contains disallowed characters. Ids must contain only alphanumerics, with underscores and hyphens allowed after the beginning of the id.", {'row' => i, 'col' => '_id'})
+              raise VeritableError.new("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} contains disallowed characters. Ids must contain only alphanumerics, with underscores and hyphens allowed after the beginning of the id.", {'row' => i, 'col' => '_id'})
             end
             
             if unique_ids.include? rows[i]['_id']
-              raise VeritableError("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is non-unique, conflicts with row #{unique_ids[rows[i]['_id']]}", {'row' => i, 'col' => '_id'})
+              raise VeritableError.new("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is non-unique, conflicts with row #{unique_ids[rows[i]['_id']]}", {'row' => i, 'col' => '_id'})
             end
             
             unique_ids[rows[i]['_id']] = i
@@ -215,7 +215,7 @@ module Veritable
             if opts['remove_extra_fields'] # just remove it
               rows[i].delete '_id'
             else
-              raise VeritableError("Validate -- row #{i}, key '_id' should not be included.", {'row' => i, 'col' => '_id'})
+              raise VeritableError.new("Validate -- row #{i}, key '_id' should not be included.", {'row' => i, 'col' => '_id'})
             end
           end
           rows[i].keys.each {|c|
@@ -225,7 +225,7 @@ module Veritable
                   rows[i].delete c
                 else
                   if not opts['allow_extra_fields'] # or silently allow
-                    raise VeritableError("Row #{i}, key #{c} is not defined in schema", {'row' => i, 'col' => c})
+                    raise VeritableError.new("Row #{i}, key #{c} is not defined in schema", {'row' => i, 'col' => c})
                   end
                 end
               elsif rows[i][c].nil? # nil values
@@ -233,7 +233,7 @@ module Veritable
                   rows[i].delete c
                 else
                   if not opts['allow_nones'] # or silently allow
-                    raise VeritableError("Row #{i}, key #{c} should be removed because it is nil", {'row' => i, 'col' => c})
+                    raise VeritableError.new("Row #{i}, key #{c} should be removed because it is nil", {'row' => i, 'col' => c})
                   end
                 end
               else # keys present in schema
@@ -252,7 +252,7 @@ module Veritable
                     rows[i].delete c
                   else
                     if not (rows[i][c].is_a? Fixnum) or not (rows[i][c] >= 0) # catch invalids
-                      raise VeritableError("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a non-negative integer.", {'row' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a non-negative integer.", {'row' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'real'
@@ -267,7 +267,7 @@ module Veritable
                     rows[i].delete c
                   else
                     if not rows[i][c].is_a? Float
-                      raise VeritableError("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a float.", {'row' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a float.", {'row' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'boolean'
@@ -293,7 +293,7 @@ module Veritable
                     rows[i].delete c
                   else
                     if not [true, false].include? rows[i][c]
-                      raise VeritableError("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a boolean", {'rows' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a boolean", {'rows' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'categorical'
@@ -308,14 +308,14 @@ module Veritable
                     rows[i].delete c
                   else
                     if not rows[i][c].is_a? String # catch invalids
-                      raise VeritableError("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a string", {'rows' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a string", {'rows' => i, 'col' => c})
                     end
                     category_counts[c] = Hash.new if not category_counts.include? c # increment count
                     category_counts[c][rows[i][c]] = 0 if not category_counts[c].include? rows[i][c]
                     category_counts[c][rows[i][c]] += 1
                   end
                 else
-                  raise VeritableError("Validate -- didn't recognize column type #{coltype}")
+                  raise VeritableError.new("Validate -- didn't recognize column type #{coltype}")
                 end
               end
               if not field_fill.include? c and not opts['remove_extra_fields']
@@ -341,13 +341,13 @@ module Veritable
                 rows[i][c] = category_map[rows[i][c]] if rows[i].include? c and not rows[i][c].nil?
               }
             else
-              raise VeritableError("Validate -- categorical column #{c} has #{category_counts[c].keys.size} unique values which exceeds the limits of #{max_cats}.", {'col' => c})
+              raise VeritableError.new("Validate -- categorical column #{c} has #{category_counts[c].keys.size} unique values which exceeds the limits of #{max_cats}.", {'col' => c})
             end
           end
         }
         if not opts['allow_empty_columns']
           field_fill.each {|c, fill|
-            raise VeritableError("Validate -- column #{c} does not have any values", {'col' => c}) if fill == 0
+            raise VeritableError.new("Validate -- column #{c} does not have any values", {'col' => c}) if fill == 0
           }
         end
       end
