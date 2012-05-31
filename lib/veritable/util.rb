@@ -186,7 +186,7 @@ module Veritable
               begin
                 rows[i]['_id'] = rows[i]['_id'].to_s if not rows[i]['_id'].is_a? String
               rescue
-                raise VeritableError("Validate -- row #{i}, key '_id' cannot be converted to string.". {'row' => i, 'col' => '_id'})
+                raise VeritableError("Validate -- row #{i}, key '_id' cannot be converted to string.", {'row' => i, 'col' => '_id'})
               end
             end
 
@@ -194,9 +194,9 @@ module Veritable
               begin
                 rows[i]['_id'].to_s
               rescue
-                raise VeritableError("Validate -- row #{i}, key '_id' is not a string.". {'row' => i, 'col' => '_id'})
+                raise VeritableError("Validate -- row #{i}, key '_id' is not a string.", {'row' => i, 'col' => '_id'})
               else
-                raise VeritableError("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is not a string.". {'row' => i, 'col' => '_id'})
+                raise VeritableError("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is not a string.", {'row' => i, 'col' => '_id'})
               end
             end
             
