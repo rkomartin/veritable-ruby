@@ -41,13 +41,11 @@ class VeritableTestUtils < Test::Unit::TestCase
   def test_data_valid_rows
     refrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
-        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b',
-         'ColBool' => false},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false},
         {'_id' => '3'}]
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
-        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b',
-         'ColBool' => false},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false},
         {'_id' => '3'}]
     Veritable::Util.validate_data(testrows, @vschema)
     assert testrows == refrows
@@ -55,6 +53,22 @@ class VeritableTestUtils < Test::Unit::TestCase
     assert testrows == refrows
   end
 
+  def test_pred_valid_rows
+    refrows = [
+        {'ColInt' => nil, 'ColFloat' => nil, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => nil, 'ColFloat' => 4.1, 'ColCat' => nil, 'ColBool' => false},
+        {'ColInt' => nil, 'ColFloat' => nil }]
+    testrows = [
+        {'ColInt' => nil, 'ColFloat' => nil, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => nil, 'ColFloat' => 4.1, 'ColCat' => nil, 'ColBool' => false},
+        {'ColInt' => nil, 'ColFloat' => nil }]
+    Veritable::Util.validate_predictions(testrows, @vschema)
+    assert testrows == refrows
+    Veritable::Util.validate_predictions(testrows, @vschema)
+    assert testrows == refrows
+  end  
+  
+  
   def test_query_params
     # ugh, this is less determinate and needs to be rewritten
     # comment out for now, manual inspection confirms the functionality is correct

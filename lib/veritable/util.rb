@@ -117,7 +117,6 @@ module Veritable
           'allow_nones' => false,
           'remove_nones' => opts['remove_nones'] || true,
           'remove_invalids' => opts['remove_invalids'] || true,
-		  'remove_nils' => opts['remove_nils'] || true,
           'reduce_categories' => opts['reduce_categories'] || true,
           'has_ids' => true,
           'assign_ids' => opts['assign_ids'] || false,
@@ -127,12 +126,45 @@ module Veritable
       end
 
       def validate_data(rows, schema)
+        validate(rows, schema, {
+          'convert_types' => false,
+          'allow_nones' => false,
+          'remove_nones' => false,
+          'remove_invalids' => false,
+          'reduce_categories' => false,
+          'has_ids' => true,
+          'assign_ids' => false,
+          'allow_extra_fields' => true,
+          'remove_extra_fields' => false,
+          'allow_empty_columns' => false})
       end
 
       def clean_predictions(predictions, schema, opts={})
+        validate(predictions, schema, {
+          'convert_types' => opts['convert_types'] || true,
+          'allow_nones' => true,
+          'remove_nones' => false,
+          'remove_invalids' => opts['remove_invalids'] || true,
+          'reduce_categories' => false,
+          'has_ids' => false,
+          'assign_ids' => false,
+          'allow_extra_fields' => false,
+          'remove_extra_fields' => opts['remove_extra_fields'] || true,
+          'allow_empty_columns' => true})
       end
 
       def validate_predictions(predictions, schema)
+        validate(predictions, schema, {
+          'convert_types' => false,
+          'allow_nones' => true,
+          'remove_nones' => false,
+          'remove_invalids' => false,
+          'reduce_categories' => false,
+          'has_ids' => false,
+          'assign_ids' => false,
+          'allow_extra_fields' => false,
+          'remove_extra_fields' => false,
+          'allow_empty_columns' => true})
       end
 
       private
@@ -241,7 +273,7 @@ module Veritable
                   end
                 end
               elsif rows[i][c].nil? # nil values
-                if opts['remove_nils'] # remove
+                if opts['remove_nones'] # remove
                   rows[i].delete c
                 else
                   if not opts['allow_nones'] # or silently allow
