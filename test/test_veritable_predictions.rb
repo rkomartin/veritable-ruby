@@ -139,10 +139,10 @@ class TestVeritableRelated < Test::Unit::TestCase
        {'_id' => 'row5', 'cat' => 'd', 'ct' => 2, 'real' => 1.14561, 'bool' => False},
        {'_id' => 'row6', 'cat' => 'a', 'ct' => 5, 'real' => 1.03412, 'bool' => False}
     ])
-    @schema = Veritable::Schema.new({'cat': {'type': 'categorical'},
-      'ct': {'type': 'count'},
-      'real': {'type': 'real'},
-      'bool': {'type': 'boolean'}
+    @schema = Veritable::Schema.new({'cat' => {'type' => 'categorical'},
+      'ct' => {'type' => 'count'},
+      'real' => {'type' => 'real'},
+      'bool' => {'type' => 'boolean'}
     })
     @a = @t.create_analysis(@schema)
   end
@@ -156,7 +156,7 @@ class TestVeritableRelated < Test::Unit::TestCase
     assert @a.related_to('cat', {'start' => 'real'}).to_a.size <= 5
     assert @a.related_to('cat', {'limit' => 0}).to_a.size == 0
     assert @a.related_to('cat', {'limit' => 3}).to_a.size <= 3
-    assert @a.related_to('cat', {'limit' => 100}).to_a.size <= 5
+    assert @a.related_to('cat', {'limit' => 3}).to_a.size <= 5
   end
 
   def teardown
