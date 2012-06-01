@@ -4,6 +4,15 @@ require 'tempfile'
 
 class VeritableTestUtils < Test::Unit::TestCase
 
+  def setup
+    @vschema = Veritable::Schema.new({
+      'ColInt' => {'type' => 'count'},
+      'ColFloat' => {'type' => 'real'},
+      'ColCat' => {'type' => 'categorical'},
+      'ColBool' => {'type' => 'boolean'}
+    })
+  end
+
   def test_write_read_csv
     file = Tempfile.new('vtest')
     file.close
@@ -27,6 +36,23 @@ class VeritableTestUtils < Test::Unit::TestCase
     ensure
       file.unlink
     end
+  end
+
+  def test_data_valid_rows
+    refrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b',
+         'ColBool' => false},
+        {'_id' => '3'}]
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b',
+         'ColBool' => false},
+        {'_id' => '3'}]
+    Veritable::Util.validate_data(testrows, @vschema)
+    assert testrows == refrows
+    Veritable::Util.clean_data(testrows, @vschema)
+    assert testrows == refrows
   end
 
   def test_query_params
