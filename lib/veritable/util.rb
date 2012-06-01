@@ -373,8 +373,7 @@ module Veritable
           cats = category_counts[c].keys
           if cats.size > max_cats # too many categories
             if opts['reduce_categories'] # keep the largest max_cats - 1
-              cats = category_counts[c].sort.keys
-              cats.reverse!
+              cats = cats.sort! {|a,b| category_counts[c][b] <=> category_counts[c][a]}
               category_map = Hash.new
               (0...cats.size).each {|j|
                 j < max_cats - 1 ? category_map[cats[j]] = cats[j] : category_map[cats[j]] = "Other"

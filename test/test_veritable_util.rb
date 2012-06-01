@@ -783,7 +783,82 @@ class VeritableTestUtils < Test::Unit::TestCase
     Veritable::Util.validate_predictions(testrows, @vschema)
   end
   
+  def test_data_too_many_cats_fail
+	eschema = { 'ColCat' => {'type' => 'categorical'} }
+	testrows = []
+	rid = 0
+	max_cols = 256
+	(0...(max_cols-1)).each do |i|
+        testrows.push({'_id' => rid.to_s, 'ColCat' => i.to_s})
+        testrows.push({'_id' => (rid + 1).to_s, 'ColCat' => i.to_s})
+        rid = rid + 2
+	end
+    testrows.push({'_id' => rid.to_s, 'ColCat' => (max_cols-1).to_s})
+    testrows.push({'_id' => (rid + 1).to_s, 'ColCat' => (max_cols).to_s})
+	assert_raise VeritableError do
+		Veritable::Util.validate_data(testrows, eschema)
+	end
+	begin
+		Veritable::Util.validate_data(testrows, eschema)
+	rescue VeritableError => e
+	    assert e.col == 'ColCat'
+	end
+  end
   
+  def test_pred_too_many_cats_fail
+	eschema = { 'ColCat' => {'type' => 'categorical'} }
+	testrows = []
+	rid = 0
+	max_cols = 256
+	(0...(max_cols-1)).each do |i|
+        testrows.push({'ColCat' => i.to_s})
+        testrows.push({'ColCat' => i.to_s})
+        rid = rid + 2
+	end
+    testrows.push({'ColCat' => (max_cols-1).to_s})
+    testrows.push({'ColCat' => (max_cols).to_s})
+	assert_raise VeritableError do
+		Veritable::Util.validate_predictions(testrows, eschema)
+	end
+	begin
+		Veritable::Util.validate_predictions(testrows, eschema)
+	rescue VeritableError => e
+	    assert e.col == 'ColCat'
+	end
+  end
+
+  def test_data_too_many_cats_fix
+	eschema = { 'ColCat' => {'type' => 'categorical'} }
+	testrows = []
+	rid = 0
+	max_cols = 256
+	(0...(max_cols-1)).each do |i|
+        testrows.push({'_id' => rid.to_s, 'ColCat' => i.to_s})
+        testrows.push({'_id' => (rid + 1).to_s, 'ColCat' => i.to_s})
+        rid = rid + 2
+	end
+    testrows.push({'_id' => rid.to_s, 'ColCat' => (max_cols-1).to_s})
+    testrows.push({'_id' => (rid + 1).to_s, 'ColCat' => (max_cols).to_s})
+	Veritable::Util.clean_data(testrows, eschema)
+	assert testrows[510]['ColCat'] == 'Other'
+	assert testrows[511]['ColCat'] == 'Other'
+	Veritable::Util.validate_data(testrows, eschema)
+  end
+
+  def test_data_empty_col_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.col == 'ColCat'
+	end
+  end
+
   
   def test_query_params
     # ugh, this is less determinate and needs to be rewritten
