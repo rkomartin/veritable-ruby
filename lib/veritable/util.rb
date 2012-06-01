@@ -117,6 +117,7 @@ module Veritable
           'allow_nones' => false,
           'remove_nones' => opts['remove_nones'] || true,
           'remove_invalids' => opts['remove_invalids'] || true,
+		  'remove_nils' => opts['remove_nils'] || true,
           'reduce_categories' => opts['reduce_categories'] || true,
           'has_ids' => true,
           'assign_ids' => opts['assign_ids'] || false,
@@ -191,7 +192,7 @@ module Veritable
           if opts['assign_ids']
             rows[i]['_id'] = i.to_s  # number the rows sequentially
           elsif opts['has_ids']
-            raise VeritableError.new("Validate -- row #{i} is missing key '_id'", {'row' => i, 'col' => '_id'}) unless r.include? '_id'
+            raise VeritableError.new("Validate -- row #{i} is missing key '_id'", {'row' => i, 'col' => '_id'}) unless rows[i].include? '_id'
             
             if opts['convert_type'] # attempt to convert _id to string
               begin
@@ -283,7 +284,7 @@ module Veritable
                   end
                 elsif coltype == 'boolean'
                   if opts['convert_types'] # try converting to bool
-                    lc = rows[i][c].strip.downcase
+                    lc = (rows[i][c]).to_s.strip.downcase
                     begin
                       if true_strings.include? lc
                         rows[i][c] = true
