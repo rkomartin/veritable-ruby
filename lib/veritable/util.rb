@@ -113,15 +113,15 @@ module Veritable
       
       def clean_data(rows, schema, opts={})
         validate(rows, schema, {
-          'convert_types' => opts['convert_types'] || true,
+          'convert_types' => opts.has_key?('convert_types') ? opts['convert_types'] : true,
           'allow_nones' => false,
-          'remove_nones' => opts['remove_nones'] || true,
-          'remove_invalids' => opts['remove_invalids'] || true,
-          'reduce_categories' => opts['reduce_categories'] || true,
+          'remove_nones' => opts.has_key?('remove_nones') ? opts['remove_nones'] : true,
+          'remove_invalids' => opts.has_key?('remove_invalids') ? opts['remove_invalids'] : true,
+          'reduce_categories' => opts.has_key?('reduce_categories') ? opts['reduce_categories'] : true,
           'has_ids' => true,
-          'assign_ids' => opts['assign_ids'] || false,
+          'assign_ids' => opts.has_key?('assign_ids') ? opts['assign_ids'] : false,
           'allow_extra_fields' => true,
-          'remove_extra_fields' => opts['remove_extra_fields'] || false,
+          'remove_extra_fields' => opts.has_key?('remove_extra_fields') ? opts['remove_extra_fields'] : false,
           'allow_empty_columns' => false})
       end
 
@@ -141,15 +141,15 @@ module Veritable
 
       def clean_predictions(predictions, schema, opts={})
         validate(predictions, schema, {
-          'convert_types' => opts['convert_types'] || true,
+          'convert_types' => opts.has_key?('convert_types') ? opts['convert_types'] : true,
           'allow_nones' => true,
           'remove_nones' => false,
-          'remove_invalids' => opts['remove_invalids'] || true,
+          'remove_invalids' => opts.has_key?('remove_invalids') ? opts['remove_invalids'] : true,
           'reduce_categories' => false,
           'has_ids' => false,
           'assign_ids' => false,
           'allow_extra_fields' => false,
-          'remove_extra_fields' => opts['remove_extra_fields'] || true,
+          'remove_extra_fields' => opts.has_key?('remove_extra_fields') ? opts['remove_extra_fields'] : true,
           'allow_empty_columns' => true})
       end
 
@@ -195,7 +195,7 @@ module Veritable
       def urlencode(k)
         URI.escape(k.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
-
+	  
       def validate(rows, schema, opts)
         schema = Veritable::Schema.new(schema) unless schema.is_a? Veritable::Schema
 
@@ -285,9 +285,9 @@ module Veritable
                 if coltype == 'count'
                   if opts['convert_types'] # try converting to int
                     begin
-                      rows[i][c] = rows[i][c].to_i unless rows[i][c].is_a? Fixnum
+                      rows[i][c] = Integer(rows[i][c])
                     rescue
-                      rows[i][c] = nil if opts['remove_invalids'] # flag for removal
+                      rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
                     end
                   end
                   if rows[i][c].nil?
@@ -302,9 +302,9 @@ module Veritable
                 elsif coltype == 'real'
                   if opts['convert_types'] # try converting to float
                     begin
-                      rows[i][c] = rows[i][c].to_f unless rows[i][c].is_a? Float
+                      rows[i][c] = Float(rows[i][c]) unless rows[i][c].is_a? Float
                     rescue
-                      rows[i][c] = nil if opts['remove_invalids'] # flag for removal
+                      rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
                     end
                   end
                   if rows[i][c].nil?
@@ -330,7 +330,7 @@ module Veritable
                         end
                       end 
                     rescue
-                      rows[i][c] = nil if opts['remove_invalids'] # flag for removal
+                      rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
                     end
                   end
                   if rows[i][c].nil? # remove flagged values
