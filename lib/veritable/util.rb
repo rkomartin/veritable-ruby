@@ -113,16 +113,16 @@ module Veritable
       
       def clean_data(rows, schema, opts={})
         validate(rows, schema, {
-          convert_types => opts['convert_types'] || true,
-          allow_nones => false,
-          remove_nones => opts['remove_nones'] || true,
-          remove_invalids => opts['remove_invalids'] || true,
-          reduce_categories => opts['reduce_categories'] || true,
-          has_ids => true,
-          assign_ids => opts['assign_ids'] || false,
-          allow_extra_fields => true,
-          remove_extra_fields => opts['remove_extra_fields'] || false,
-          allow_empty_columns => false})
+          'convert_types' => opts['convert_types'] || true,
+          'allow_nones' => false,
+          'remove_nones' => opts['remove_nones'] || true,
+          'remove_invalids' => opts['remove_invalids'] || true,
+          'reduce_categories' => opts['reduce_categories'] || true,
+          'has_ids' => true,
+          'assign_ids' => opts['assign_ids'] || false,
+          'allow_extra_fields' => true,
+          'remove_extra_fields' => opts['remove_extra_fields'] || false,
+          'allow_empty_columns' => false})
       end
 
       def validate_data(rows, schema)
