@@ -17,8 +17,6 @@ module Veritable
         'limit' => opts['limit']}.update(@opts)) {|x| Table.new(@opts, x)}
     end
 
-    end
-
     def table(table_id)
       Table.new(@opts, get("tables/#{table_id}"))
     end
@@ -97,7 +95,7 @@ module Veritable
       rescue VeritableError => e
         if (not e.respond_to?(:http_code)) or (not (e.http_code == "404 Resource Not Found"))
           raise e
-        end 
+        end
       end
     end
 
@@ -144,7 +142,6 @@ module Veritable
       end
       doc = post(link('analyses'), {:_id => analysis_id, :description => description, :type => analysis_type, :schema => schema})
       Analysis.new(@opts, doc)
-
     end
 
     def inspect; to_s; end
