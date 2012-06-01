@@ -47,7 +47,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     o = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
     r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
     pr = @a2.predict r
-    r.keys.each {|k| assert (not pr[k].nil?) }
+    r.request.keys.each {|k| assert (not pr[k].nil?) }
     assert pr.is_a? Veritable::Prediction
     assert pr.uncertainty.is_a? Hash
     assert pr.schema.is_a? Veritable::Schema
