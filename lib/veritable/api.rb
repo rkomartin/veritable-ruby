@@ -265,7 +265,7 @@ module Veritable
     def succeeded?; state == 'succeeded'; end
     def failed?; state == 'failed'; end
     def error; state == 'failed' ? @doc['error'] : nil; end
-    def progress; state == 'succeeded' ? @doc['progress'] : nil; end
+    def progress; state == @doc['progress']; end
   end
 
   class Schema < Hash
