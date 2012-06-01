@@ -67,6 +67,166 @@ class VeritableTestUtils < Test::Unit::TestCase
     Veritable::Util.validate_predictions(testrows, @vschema)
     assert testrows == refrows
   end  
+
+  def test_data_missing_id_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	end
+  end
+
+  def test_data_missing_id_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema, { 'assign_ids' => true })
+	assert testrows[0]['_id'] != testrows[1]['_id']
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  def test_data_duplicate_id_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '1', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == '_id'
+	end
+  end
+
+  def test_data_nonstring_id_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => 2, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == '_id'
+	end
+  end
+
+  def test_data_nonstring_id_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => 2, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	assert testrows[1]['_id'] == '2'
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+  
+  INVALID_IDS = ["", " foo",
+    "foo ", " foo ", "foo\n", "foo\nbar", 5, 374.34, false,
+    "_underscores"]
+
+  def test_data_nonalphanumeric_ids_fail
+    INVALID_IDS.each do |_id|
+		testrows = [
+			{'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+			{'_id' => _id, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+		assert_raise VeritableError do
+			Veritable::Util.validate_data(testrows, @vschema)
+		end
+	end
+  end
+
+  def test_data_extrafield_pass
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColEx' => 4, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.validate_data(testrows, @vschema)
+  end  
+
+  def test_pred_extrafield_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => nil, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColEx' => nil, 'ColInt' => 4, 'ColFloat' => nil, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColEx'
+	end
+  end
+
+  def test_pred_idfield_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => nil, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => nil, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == '_id'
+	end
+  end
+
+  def test_data_extrafield_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColEx' => 4, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema, { 'remove_extra_fields' => true })
+	assert not(testrows[1].has_key?('ColEx'))
+    Veritable::Util.validate_data(testrows, @vschema)
+  end  
+
+  def test_pred_extrafield_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColEx' => 4, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_predictions(testrows, @vschema)
+	assert not(testrows[0].has_key?('_id'))
+	assert not(testrows[1].has_key?('ColEx'))
+    Veritable::Util.validate_predictions(testrows, @vschema)
+  end  
+
+  
+  def test_data_nonefield_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => nil, 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColCat'
+	end
+  end
+
+  def test_data_nonefield_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => nil, 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	assert not(testrows[1].has_key?('ColCat'))
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+  
+  
   
   
   def test_query_params
