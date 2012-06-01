@@ -322,12 +322,10 @@ module Veritable
                         rows[i][c] = true
                       elsif false_strings.include? lc
                         rows[i][c] = false
-                      elsif rows[i][c] =~ Regexp.new('\A[0-9]+\z') # note that this behavior differs from what a rubyist might expect; "0" maps to false
-                        if rows[i][c].to_i == 0
-                          rows[i][c] = false
-                        else
-                          rows[i][c] = true
-                        end
+                      elsif Integer(rows[i][c]) == 0
+                        rows[i][c] = false
+                      else
+                        rows[i][c] = true
                       end 
                     rescue
                       rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
@@ -345,7 +343,7 @@ module Veritable
                     begin
                       rows[i][c] = rows[i][c].to_s unless rows[i][c].is_a? String
                     rescue
-                      rows[i][c] = nil if opts['remove_invalids'] # flag for removal
+                      rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
                     end
                   end
                   if rows[i][c].nil? # remove flagged values

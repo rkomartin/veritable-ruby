@@ -566,7 +566,6 @@ class VeritableTestUtils < Test::Unit::TestCase
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
 	rescue VeritableError => e
-		print e
 	    assert e.row == 1
 	    assert e.col == 'ColCat'
 	end
@@ -582,7 +581,6 @@ class VeritableTestUtils < Test::Unit::TestCase
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
 	rescue VeritableError => e
-		print e
 	    assert e.row == 1
 	    assert e.col == 'ColCat'
 	end
@@ -606,6 +604,185 @@ class VeritableTestUtils < Test::Unit::TestCase
     Veritable::Util.validate_predictions(testrows, @vschema)
   end
 
+  def test_data_non_bool_boolean_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'false'}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColBool'
+	end
+  end
+  
+  def test_pred_non_bool_boolean_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'false'}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColBool'
+	end
+  end
+  
+  def test_data_non_bool_boolean_truefix
+    testrows = [
+    {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+    {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => '1'},
+    {'_id' => '4', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => '2'},
+    {'_id' => '5', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'True'},
+    {'_id' => '6', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'true'},
+    {'_id' => '7', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'Yes'},
+    {'_id' => '8', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'YES'},
+    {'_id' => '9', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'Y'},
+    {'_id' => '10', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'y'}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	testrows.each do |r|
+		assert r['ColBool'] == true
+	end
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  def test_pred_non_bool_boolean_truefix
+    testrows = [
+    {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => '1'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => '2'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'True'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'true'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'Yes'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'YES'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'Y'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'y'}]
+    Veritable::Util.clean_predictions(testrows, @vschema)
+	testrows.each do |r|
+		assert r['ColBool'] == true
+	end
+    Veritable::Util.validate_predictions(testrows, @vschema)
+  end  
+
+
+  def test_data_non_bool_boolean_falsefix
+    testrows = [
+    {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => false},
+    {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => '0'},
+    {'_id' => '5', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'False'},
+    {'_id' => '6', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'false'},
+    {'_id' => '7', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'No'},
+    {'_id' => '8', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'NO'},
+    {'_id' => '9', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'N'},
+    {'_id' => '10', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'n'}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	testrows.each do |r|
+		assert r['ColBool'] == false
+	end
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  def test_pred_non_bool_boolean_falsefix
+    testrows = [
+    {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => false},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => '0'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'False'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'false'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'No'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'NO'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'N'},
+    {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'n'}]
+    Veritable::Util.clean_predictions(testrows, @vschema)
+	testrows.each do |r|
+		assert r['ColBool'] == false
+	end
+    Veritable::Util.validate_predictions(testrows, @vschema)
+  end  
+
+  def test_data_nonvalid_bool_boolean_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColBool'
+	end
+  end
+  
+  def test_pred_nonvalid_bool_boolean_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColBool'
+	end
+  end
+
+  def test_data_nonvalid_bool_boolean_fixfail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
+	assert_raise VeritableError do
+		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
+	end
+	begin
+		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColBool'
+	end
+  end
+  
+  def test_pred_nonvalid_bool_boolean_fixfail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
+	assert_raise VeritableError do
+		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
+	end
+	begin
+		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColBool'
+	end
+  end
+
+  def test_data_nonvalid_bool_boolean_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	assert (not testrows[1].has_key?('ColBool'))
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  def test_pred_nonvalid_bool_boolean_fix
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
+    Veritable::Util.clean_predictions(testrows, @vschema)
+	assert (not testrows[1].has_key?('ColBool'))
+    Veritable::Util.validate_predictions(testrows, @vschema)
+  end
+  
   
   
   def test_query_params
