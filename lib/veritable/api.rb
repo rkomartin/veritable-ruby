@@ -268,58 +268,58 @@ module Veritable
     def progress; state == 'succeeded' ? @doc['progress'] : nil; end
   end
 
-class Schema < Hash
-  def initialize(data, subset=nil)
-    begin
-      data.each {|k, v|
-        if subset.is_a? Array
-          self[k] = v if subset.include? k
-        elsif subset.is_a? Hash
-          self[k] = v if subset.has_key? k
-        else
-          self[k] = v
-        end
-      }
-    rescue
+  class Schema < Hash
+    def initialize(data, subset=nil)
       begin
-        data.to_s
+        data.each {|k, v|
+          if subset.is_a? Array
+            self[k] = v if subset.include? k
+          elsif subset.is_a? Hash
+            self[k] = v if subset.has_key? k
+          else
+            self[k] = v
+          end
+        }
       rescue
-        raise VeritableError.new("Initialize schema -- invalid schema data.")
-      else
-        raise VeritableError.new("Initialize schema -- invalid schema data #{data}.")
+        begin
+          data.to_s
+        rescue
+          raise VeritableError.new("Initialize schema -- invalid schema data.")
+        else
+          raise VeritableError.new("Initialize schema -- invalid schema data #{data}.")
+        end
       end
     end
-  end
 
-  def type(column)
-    self[column]['type']
-  end
+    def type(column)
+      self[column]['type']
+    end
 
-  def validate
-    self.each {|k, v|
-      if not k.is_a? String
-        begin
-          k.to_s
-        rescue
-          raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id.")
-        else
-          raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id #{k}")
+    def validate
+      self.each {|k, v|
+        if not k.is_a? String
+          begin
+            k.to_s
+          rescue
+            raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id.")
+          else
+            raise VeritableError.new("Validate schema -- Invalid schema specification: nonstring column id #{k}")
+          end
         end
-      end
-      begin
-        check_id k
-      rescue
-        raise VeritableError.new("Validate schema -- Invalid column name #{k}: must contain only alphanumerics, dashes, and underscores, and may not begin with a dash or underscore.")
-      end
-      if not v.include? 'type'
-        raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k} must specify a 'type', one of #{DATATYPES}")
-      end
-      if not DATATYPES.include? v['type']
-        raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k}, type #{v['type']} is not valid. Type must be one of #{DATATYPES}")
-      end
-    }
+        begin
+          check_id k
+        rescue
+          raise VeritableError.new("Validate schema -- Invalid column name #{k}: must contain only alphanumerics, dashes, and underscores, and may not begin with a dash or underscore.")
+        end
+        if not v.include? 'type'
+          raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k} must specify a 'type', one of #{DATATYPES}")
+        end
+        if not DATATYPES.include? v['type']
+          raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k}, type #{v['type']} is not valid. Type must be one of #{DATATYPES}")
+        end
+      }
+    end
   end
-end
 
   class Prediction < Hash
     attr_reader :request
