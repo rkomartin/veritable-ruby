@@ -115,12 +115,13 @@ class VeritablePredictionClassTest < Test::Unit::TestCase
         else
           raise Exception.new
         end
-        p_within = tp.prob_within(k, v[3])
-        assert((p_within - v[4]).abs < tolerance, "Failed on #{k}, probability within #{v[3]} is #{p_within}, not within #{tolerance} of #{v[4]}")
+        assert((uncertainty - v[3]).abs < tolerance, "Failed on #{k}, uncertainty is #{uncertainty}, not within #{tolerance} of #{v[3]}")
+        p_within = tp.prob_within(k, v[4])
+        assert((p_within - v[5]).abs < tolerance, "Failed on #{k}, probability within #{v[4]} is #{p_within}, not within #{tolerance} of #{v[5]}")
         c_values = tp.credible_values(k)
-        assert(c_values == v[5], "Failed on #{k}, credible values are not equal to #{v[5]}")
-        c_values = tp.credible_values(k, p=v[6])
-        assert(c_values = v[7], "Failed on #{k}, credible values within #{v[6]} are not equal to #{v[7]}")
+        assert(c_values == v[6], "Failed on #{k}, credible values are not equal to #{v[6]}")
+        c_values = tp.credible_values(k, p=v[7])
+        assert(c_values = v[8], "Failed on #{k}, credible values within #{v[7]} are not equal to #{v[8]}")
       }
     }
   end

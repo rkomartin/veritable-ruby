@@ -331,17 +331,18 @@ module Veritable
       @request = request
       @distribution = distribution
       @schema = Schema.new(request.keys)
-      @uncertainty = Hash.new()
-
+      @uncertainty = Hash.new {|hash, k| calculate_uncertainty k}
+      @point_estimates = Hash.new {|hash, k| point_estimate k}
       request.each { |k,v|
-        if v.nil?
-          self[k] = point_estimate k
-          @uncertainty[k] = calculate_uncertainty k
-        else
-          self[k] = v
+        if not v.nil?
+          @point_estimates[k] = v
           @uncertainty[k] = 0.0
         end
       }
+    end
+
+    def [](k)
+      @point_estimates[k]
     end
 
     def prob_within(column, range)
@@ -360,6 +361,7 @@ module Veritable
           memo + 1 if (mn.nil? or v >= mn) and (mx.nil? or v <=mx)
         }
         count.to_f / distribution.size
+      end
     end
 
     def credible_values(column, p=nil)
@@ -420,19 +422,18 @@ module Veritable
       end
     end
 
-      def calculate_uncertainty(column)
-        values = distribution.collect {|row| row[column]}
-        col_type = schema.type column
-        check_datatype(col_type, "Calculate uncertainty -- ")
-        n = values.size
-        if col_type == 'boolean' or col_type == 'categorical'
-          e = (counts col_type).max[0]
-          c = 1.0 - (vals.count {|v| v == e} / n.to_f)
-          c.to_f
-        elsif col_type == 'count' or col_type == 'real'
-          r = credible_values column
-          (r[1] - r[0]).to_f
-        end
+    def calculate_uncertainty(column)
+      values = distribution.collect {|row| row[column]}
+      col_type = schema.type column
+      check_datatype(col_type, "Calculate uncertainty -- ")
+      n = values.size
+      if col_type == 'boolean' or col_type == 'categorical'
+        e = (counts col_type).max[0]
+        c = 1.0 - (vals.count {|v| v == e} / n.to_f)
+        c.to_f
+      elsif col_type == 'count' or col_type == 'real'
+        r = credible_values column
+        (r[1] - r[0]).to_f
       end
     end
   end
