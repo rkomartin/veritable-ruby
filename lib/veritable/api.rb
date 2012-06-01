@@ -307,7 +307,7 @@ module Veritable
           end
         end
         begin
-          check_id k
+          Util.check_id k
         rescue
           raise VeritableError.new("Validate schema -- Invalid column name #{k}: must contain only alphanumerics, dashes, and underscores, and may not begin with a dash or underscore.")
         end
