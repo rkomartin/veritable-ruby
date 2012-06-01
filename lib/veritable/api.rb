@@ -396,7 +396,7 @@ module Veritable
 
     def sorted_values(column)
       values = (distribution.collect {|row| row[column]}).reject {|x| x.nil?}
-      values.sort_by {|k, v| v}
+      values.sort
     end
 
     def counts(column)
