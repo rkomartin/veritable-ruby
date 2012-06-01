@@ -187,7 +187,7 @@ class VeritableTestUtils < Test::Unit::TestCase
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColEx' => 4, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
     Veritable::Util.clean_data(testrows, @vschema, { 'remove_extra_fields' => true })
-	assert not(testrows[1].has_key?('ColEx'))
+	assert (not testrows[1].has_key?('ColEx'))
     Veritable::Util.validate_data(testrows, @vschema)
   end  
 
@@ -196,8 +196,8 @@ class VeritableTestUtils < Test::Unit::TestCase
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColEx' => 4, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
     Veritable::Util.clean_predictions(testrows, @vschema)
-	assert not(testrows[0].has_key?('_id'))
-	assert not(testrows[1].has_key?('ColEx'))
+	assert (not testrows[0].has_key?('_id'))
+	assert (not testrows[1].has_key?('ColEx'))
     Veritable::Util.validate_predictions(testrows, @vschema)
   end  
 
@@ -222,10 +222,91 @@ class VeritableTestUtils < Test::Unit::TestCase
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => nil, 'ColBool' => false}]
     Veritable::Util.clean_data(testrows, @vschema)
-	assert not(testrows[1].has_key?('ColCat'))
+	assert (not testrows[1].has_key?('ColCat'))
     Veritable::Util.validate_data(testrows, @vschema)
   end
   
+  def test_data_non_int_count_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => '4', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColInt'
+	end
+  end
+  
+  def test_pred_non_int_count_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => '4', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColInt'
+	end
+  end
+
+  def test_data_non_int_count_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => '4', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	assert testrows[1]['ColInt'] == 4
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  def test_pred_non_int_count_fix
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => '4', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_predictions(testrows, @vschema)
+	assert testrows[1]['ColInt'] == 4
+    Veritable::Util.validate_predictions(testrows, @vschema)
+  end
+
+  def test_data_nonvalid_int_count_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 'jello', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColInt'
+	end
+  end
+  
+  def test_pred_nonvalid_int_count_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 'jello', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+	    assert e.row == 1
+	    assert e.col == 'ColInt'
+	end
+  end
+
+
+
+
   
   
   
