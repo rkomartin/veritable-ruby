@@ -556,6 +556,57 @@ class VeritableTestUtils < Test::Unit::TestCase
     Veritable::Util.validate_predictions(testrows, @vschema)
   end
   
+  def test_data_non_str_cat_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 3, 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_data(testrows, @vschema)
+	rescue VeritableError => e
+		print e
+	    assert e.row == 1
+	    assert e.col == 'ColCat'
+	end
+  end
+  
+  def test_pred_non_str_cat_fail
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 3, 'ColBool' => false}]
+	assert_raise VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	end
+	begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+	rescue VeritableError => e
+		print e
+	    assert e.row == 1
+	    assert e.col == 'ColCat'
+	end
+  end
+
+  def test_data_non_str_cat_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 3, 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema)
+	assert testrows[1]['ColCat'] == '3'
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  def test_pred_non_str_cat_fix
+    testrows = [
+        {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 3, 'ColBool' => false}]
+    Veritable::Util.clean_predictions(testrows, @vschema)
+	assert testrows[1]['ColCat'] == '3'
+    Veritable::Util.validate_predictions(testrows, @vschema)
+  end
+
+  
   
   def test_query_params
     # ugh, this is less determinate and needs to be rewritten

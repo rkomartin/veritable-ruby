@@ -337,7 +337,7 @@ module Veritable
                     rows[i].delete c
                   else
                     if not [true, false].include? rows[i][c]
-                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a boolean", {'rows' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a boolean", {'row' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'categorical'
@@ -352,7 +352,7 @@ module Veritable
                     rows[i].delete c
                   else
                     if not rows[i][c].is_a? String # catch invalids
-                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a string", {'rows' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a string", {'row' => i, 'col' => c})
                     end
                     category_counts[c] = Hash.new if not category_counts.include? c # increment count
                     category_counts[c][rows[i][c]] = 0 if not category_counts[c].include? rows[i][c]
