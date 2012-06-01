@@ -321,7 +321,7 @@ module Veritable
     end
   end
 
-  class Prediction < Hash
+  class Prediction
     attr_reader :request
     attr_reader :distribution
     attr_reader :schema
@@ -330,9 +330,9 @@ module Veritable
     def initialize(request, distribution, schema)
       @request = request
       @distribution = distribution
-      @schema = Schema.new(request.keys)
-      @uncertainty = Hash.new {|hash, k| calculate_uncertainty k}
-      @point_estimates = Hash.new {|hash, k| point_estimate k}
+      @schema = Schema.new(schema)
+      @uncertainty = Hash.new {|hash, k| hash[k] = self.send(:calculate_uncertainty, k)}
+      @point_estimates = Hash.new {|hash, k| hash[k] = self.send(:point_estimate, k)}
       request.each { |k,v|
         if not v.nil?
           @point_estimates[k] = v
@@ -341,13 +341,12 @@ module Veritable
       }
     end
 
-    def [](k)
-      @point_estimates[k]
+    define_method :[] do |k| @point_estimates[k]
     end
 
     def prob_within(column, range)
       col_type = schema.type column
-      check_datatype(col_type, "Probability within -- ")
+      Veritable::Util.check_datatype(col_type, "Probability within -- ")
       if col_type == 'boolean' or col_type == 'categorical'
         count = distribution.inject(0) {|memo, row|
           memo + 1 if range.include? row[column]
@@ -366,7 +365,7 @@ module Veritable
 
     def credible_values(column, p=nil)
       col_type = schema.type column
-      check_datatype(col_type, "Credible values -- ")
+      Veritable::Util.check_datatype(col_type, "Credible values -- ")
       if col_type == 'boolean' or col_type == 'categorical'
         p = 0.5 if p.nil?
         tf = Hash.new
@@ -376,7 +375,7 @@ module Veritable
         p = 0.9 if p.nil?
         n = distribution.size
         a = (n * (1.0 - p) / 2.0).round.to_i
-        sv = sorted_values
+        sv = sorted_values column
         n = sv.size
         lo = sv[a]
         hi = sv[n - 1 - a]
@@ -410,7 +409,7 @@ module Veritable
 
     def point_estimate(column)
       col_type = schema.type column
-      check_datatype(col_type, "Point estimate -- ")
+      Veritable::Util.check_datatype(col_type, "Point estimate -- ")
       if col_type == 'boolean' or col_type == 'categorical'
         # use the mode
         counts(column).max[0]
@@ -418,14 +417,14 @@ module Veritable
         # use the mean
         values = distribution.collect {|row| row[column]}
         mean = (values.inject(0) {|memo, obj| memo + obj}) / values.size.to_f
-        col_type == real ? mean : mean.round.to_i
+        col_type == 'real' ? mean : mean.round.to_i
       end
     end
 
     def calculate_uncertainty(column)
       values = distribution.collect {|row| row[column]}
       col_type = schema.type column
-      check_datatype(col_type, "Calculate uncertainty -- ")
+      Veritable::Util.check_datatype(col_type, "Calculate uncertainty -- ")
       n = values.size
       if col_type == 'boolean' or col_type == 'categorical'
         e = (counts col_type).max[0]
