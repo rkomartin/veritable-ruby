@@ -241,10 +241,13 @@ module Veritable
       end
     end
 
-    def related_to(column_id, start=nil, limit=nil)
+    def related_to(column_id, opts={'start' => nil, 'limit' => nil})
       update if running?
       if succeeded?
-        Cursor.new({'collection' => "#{link('analyses')}/#{column_id}"}.update(@opts))
+        Cursor.new(
+         {'collection' => "#{link('analyses')}/#{column_id}",
+          'start' => opts['start'],
+          'limit' => opts['limit']}.update(@opts))
       elsif running?
         raise VeritableError.new("Related -- Analysis with id #{_id} is still running and not yet ready to calculate related.")
       elsif failed?
