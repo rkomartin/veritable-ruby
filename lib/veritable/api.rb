@@ -377,7 +377,6 @@ module Veritable
       if col_type == 'boolean' or col_type == 'categorical'
         p = 0.5 if p.nil?
         tf = Hash.new
-        puts(freqs(counts(column)))
         ((freqs(counts(column)).sort_by {|k, v| v}).reject {|c, a| a < p}).each {|k, v| tf[k] = v}
         tf
       elsif col_type == 'count' or col_type == 'real'
