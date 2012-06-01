@@ -1,3 +1,3 @@
 module Veritable
-  VERSION = "0.9.3.0"
+  VERSION = "0.1.0.0"
 end
