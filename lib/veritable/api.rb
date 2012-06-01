@@ -331,7 +331,6 @@ module Veritable
       @request = request
       @distribution = distribution
       @schema = Schema.new(schema)
-      print @schema
       @uncertainty = Hash.new {|hash, k| hash[k] = self.send(:calculate_uncertainty, k)}
       @point_estimates = Hash.new {|hash, k| hash[k] = self.send(:point_estimate, k)}
       request.each { |k,v|
@@ -350,15 +349,23 @@ module Veritable
       Veritable::Util.check_datatype(col_type, "Probability within -- ")
       if col_type == 'boolean' or col_type == 'categorical'
         count = distribution.inject(0) {|memo, row|
-          memo + 1 if range.include? row[column]
+          if range.include? row[column]
+            memo + 1 
+          else
+            memo
+          end
         }
         count.to_f / distribution.size
       elsif col_type == 'count' or col_type == 'real'
         mn = range[0]
-        mx = range[0]
+        mx = range[1]
         count = distribution.inject(0) {|memo, row|
           v = row[column]
-          memo + 1 if (mn.nil? or v >= mn) and (mx.nil? or v <=mx)
+          if (mn.nil? or v >= mn) and (mx.nil? or v <=mx)
+            memo + 1 
+          else
+            memo
+          end
         }
         count.to_f / distribution.size
       end
@@ -370,7 +377,8 @@ module Veritable
       if col_type == 'boolean' or col_type == 'categorical'
         p = 0.5 if p.nil?
         tf = Hash.new
-        (freqs.sort.reject {|c, a| a < p}).each {|k, v| tf[k] = v}
+        puts(freqs(counts(column)))
+        ((freqs(counts(column)).sort_by {|k, v| v}).reject {|c, a| a < p}).each {|k, v| tf[k] = v}
         tf
       elsif col_type == 'count' or col_type == 'real'
         p = 0.9 if p.nil?
@@ -388,21 +396,27 @@ module Veritable
 
     def sorted_values(column)
       values = (distribution.collect {|row| row[column]}).reject {|x| x.nil?}
-      values.sort
+      values.sort_by {|k, v| v}
     end
 
     def counts(column)
-      counts = Hash.new()
+      cts = Hash.new
       distribution.each {|row|
-        counts[row[column]] += 1 if row.has_key? column
+        if row.has_key? column
+          cat = row[column]
+          if not (cts.has_key? cat)
+            cts[cat] = 0
+          end
+          cts[cat] += 1
+        end
       }
-      counts
+      cts
     end
 
-    def freqs(counts)
-      total = counts.values.inject(0) {|memo, obj| memo + obj}
+    def freqs(cts)
+      total = cts.values.inject(0) {|memo, obj| memo + obj}
       freqs = Hash.new()
-      counts.each {|k, v|
+      cts.each {|k, v|
         freqs[k] = v.to_f / total
       }
       freqs
@@ -413,7 +427,7 @@ module Veritable
       Veritable::Util.check_datatype(col_type, "Point estimate -- ")
       if col_type == 'boolean' or col_type == 'categorical'
         # use the mode
-        counts(column).max[0]
+        (counts(column).max_by {|k, v| v})[0]
       elsif col_type == 'real' or col_type == 'count'
         # use the mean
         values = distribution.collect {|row| row[column]}
@@ -428,8 +442,8 @@ module Veritable
       Veritable::Util.check_datatype(col_type, "Calculate uncertainty -- ")
       n = values.size
       if col_type == 'boolean' or col_type == 'categorical'
-        e = (counts col_type).max[0]
-        c = 1.0 - (vals.count {|v| v == e} / n.to_f)
+        e = ((counts column).max_by {|k, v| v})[0]
+        c = 1.0 - (values.count {|v| v == e} / n.to_f)
         c.to_f
       elsif col_type == 'count' or col_type == 'real'
         r = credible_values column

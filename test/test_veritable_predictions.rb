@@ -47,16 +47,16 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     o = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
     r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
     pr = @a2.predict r
-    r.request.keys.each {|k| assert (not pr[k].nil?) }
+    r.keys.each {|k| assert (not pr[k].nil?) }
     assert pr.is_a? Veritable::Prediction
     assert pr.uncertainty.is_a? Hash
     assert pr.schema.is_a? Veritable::Schema
     assert pr.distribution.is_a? Array
     assert pr.request.is_a? Hash
-    pr.keys.each {|k|
+    pr.request.keys.each {|k|
       assert pr[k].is_a? o[k].class
       assert pr.uncertainty[k].is_a? Float
-      assert pr[k] == o[k] or r[k].nil?
+      assert((pr[k] == o[k] or r[k].nil?), "Failed with #{pr[k]}, #{o[k]}, #{r[k]}")
     }
     pr.distribution.each {|d| assert d.is_a? Hash}
 
