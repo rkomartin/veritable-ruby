@@ -152,7 +152,7 @@ class TestVeritableRelated < Test::Unit::TestCase
     @schema.keys.each {|col|
       assert @a.related_to(col).to_a.size <= 5
     }
-    assert_raise(VeritableError) {@.related_to('missing_col')}
+    assert_raise(VeritableError) {@a.related_to('missing_col')}
     assert @a.related_to('cat', {'start' => 'real'}).to_a.size <= 5
     assert @a.related_to('cat', {'limit' => 0}).to_a.size == 0
     assert @a.related_to('cat', {'limit' => 3}).to_a.size <= 3
