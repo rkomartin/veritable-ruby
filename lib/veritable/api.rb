@@ -265,7 +265,7 @@ module Veritable
     def succeeded?; state == 'succeeded'; end
     def failed?; state == 'failed'; end
     def error; state == 'failed' ? @doc['error'] : nil; end
-    def progress; state == @doc['progress']; end
+    def progress; state == 'running' ? @doc['progress'] : nil; end
   end
 
   class Schema < Hash
@@ -331,6 +331,7 @@ module Veritable
       @request = request
       @distribution = distribution
       @schema = Schema.new(schema)
+      print @schema
       @uncertainty = Hash.new {|hash, k| hash[k] = self.send(:calculate_uncertainty, k)}
       @point_estimates = Hash.new {|hash, k| hash[k] = self.send(:point_estimate, k)}
       request.each { |k,v|
