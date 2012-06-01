@@ -196,6 +196,12 @@ module Veritable
         URI.escape(k.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
 	  
+	  def to_integer(v)
+	    return v if v.is_a? Fixnum
+		raise VeritableError.new("") unless /\A[+-]?\d+?(\.0*)?\Z/ === v
+		return Integer(v)
+	  end
+	  	  
       def validate(rows, schema, opts)
         schema = Veritable::Schema.new(schema) unless schema.is_a? Veritable::Schema
 
@@ -285,7 +291,7 @@ module Veritable
                 if coltype == 'count'
                   if opts['convert_types'] # try converting to int
                     begin
-                      rows[i][c] = Integer(rows[i][c])
+                      rows[i][c] = to_integer(rows[i][c])
                     rescue
                       rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
                     end
@@ -322,7 +328,7 @@ module Veritable
                         rows[i][c] = true
                       elsif false_strings.include? lc
                         rows[i][c] = false
-                      elsif Integer(rows[i][c]) == 0
+                      elsif to_integer(rows[i][c]) == 0 # note that this behavior differs from what a rubyist might expect; "0" maps to false
                         rows[i][c] = false
                       else
                         rows[i][c] = true
@@ -373,8 +379,7 @@ module Veritable
           cats = category_counts[c].keys
           if cats.size > max_cats # too many categories
             if opts['reduce_categories'] # keep the largest max_cats - 1
-              cats = category_counts[c].sort.keys
-              cats.reverse!
+              cats = cats.sort! {|a,b| category_counts[c][b] <=> category_counts[c][a]}
               category_map = Hash.new
               (0...cats.size).each {|j|
                 j < max_cats - 1 ? category_map[cats[j]] = cats[j] : category_map[cats[j]] = "Other"
