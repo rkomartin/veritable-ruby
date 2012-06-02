@@ -6,8 +6,8 @@ module Veritable
     include VeritableObject
     def initialize(opts=nil, doc=nil)
       super(opts, doc)
-      require_opts [:api_key, :api_base_url]
-      default_opts({:ssl_verify => true, :enable_gzip => true})
+      require_opts :api_key, :api_base_url
+      default_opts(:ssl_verify => true, :enable_gzip => true)
     end
 
     def get(url, params=nil, headers={})

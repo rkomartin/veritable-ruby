@@ -8,7 +8,7 @@ module Veritable
     def initialize(opts=nil, doc=nil, &lazymap)
       super(opts, doc)
 
-      require_opts ['collection']
+      require_opts 'collection'
       default_opts({'per_page' => 100})
 
       collection_key = collection.split("/")[-1]

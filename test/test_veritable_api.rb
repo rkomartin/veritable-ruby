@@ -1,10 +1,6 @@
 # encoding: utf-8
 
-require 'multi_json'
-require 'test/unit'
-require 'veritable'
-
-INVALIDS = ['éléphant', '374.34', 'ajfh/d/sfd@#$', 'きんぴらごぼう', '', ' foo', 'foo ', ' foo ', "foo\n", "foo\nbar", 3, 1.414, false, true, '_underscore', '-dash']
+require 'helper'
 
 class VeritableAPITest < Test::Unit::TestCase
   def initialize(*args)

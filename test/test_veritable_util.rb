@@ -1,5 +1,4 @@
-require 'veritable'
-require 'test/unit'
+require 'helper'
 require 'tempfile'
 
 class VeritableTestUtils < Test::Unit::TestCase

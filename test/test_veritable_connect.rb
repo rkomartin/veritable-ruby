@@ -1,7 +1,6 @@
 # encoding: utf-8
 
-require 'test/unit'
-require 'veritable'
+require 'helper'
 
 class VeritableConnectTest < Test::Unit::TestCase
   def test_connect
