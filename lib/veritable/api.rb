@@ -245,7 +245,7 @@ module Veritable
       update if running?
       if succeeded?
         Cursor.new(
-         {'collection' => "#{link('analyses')}/#{column_id}",
+         {'collection' => "#{link('related')}/#{column_id}",
           'start' => opts['start'],
           'limit' => opts['limit']}.update(@opts))
       elsif running?
