@@ -7,6 +7,7 @@ require 'veritable/util'
 module Veritable
   class API
     include VeritableResource
+
     def root; get(""); end
 
     def limits; get("user/limits"); end
@@ -324,7 +325,7 @@ module Veritable
     end
   end
 
-  class Prediction
+  class Prediction < Hash
     attr_reader :request
     attr_reader :distribution
     attr_reader :schema
@@ -334,17 +335,17 @@ module Veritable
       @request = request
       @distribution = distribution
       @schema = Schema.new(schema)
-      @uncertainty = Hash.new {|hash, k| hash[k] = self.send(:calculate_uncertainty, k)}
-      @point_estimates = Hash.new {|hash, k| hash[k] = self.send(:point_estimate, k)}
+      @uncertainty = Hash.new()
+
       request.each { |k,v|
-        if not v.nil?
-          @point_estimates[k] = v
+        if v.nil?
+          self[k] = point_estimate k
+          @uncertainty[k] = calculate_uncertainty k
+        else
+          self[k] = v
           @uncertainty[k] = 0.0
         end
       }
-    end
-
-    define_method :[] do |k| @point_estimates[k]
     end
     
     def prob_within(column, range)
