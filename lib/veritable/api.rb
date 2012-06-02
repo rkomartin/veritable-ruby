@@ -7,6 +7,7 @@ require 'veritable/util'
 module Veritable
   class API
     include VeritableResource
+
     def root; get(""); end
 
     def limits; get("user/limits"); end
@@ -65,7 +66,7 @@ module Veritable
 
     alias :rest_delete :delete
     def delete
-      rest_delete link 'self'
+      rest_delete(link('self'))
     end
 
     def row(row_id); get("#{link('rows')}/#{row_id}"); end
@@ -78,7 +79,7 @@ module Veritable
 
     def upload_row(row)
       Util.check_row row
-      put "#{link('rows')}/#{row['_id']}", row
+      put("#{link('rows')}/#{row['_id']}", row)
     end
 
     def batch_upload_rows(rows, per_page=100)
@@ -86,7 +87,7 @@ module Veritable
     end
 
     def delete_row(row_id)
-      rest_delete "#{link('rows')}/#{row_id}"
+      rest_delete("#{link('rows')}/#{row_id}")
     end
 
     def batch_delete_rows(rows, per_page=100)
@@ -110,7 +111,7 @@ module Veritable
     end
 
     def delete_analysis(analysis_id)
-      rest_delete "#{link('analyses')}/#{analysis_id}"
+      rest_delete("#{link('analyses')}/#{analysis_id}")
     end
 
     def create_analysis(schema, analysis_id=nil, description="", force=false, analysis_type="veritable")
@@ -178,13 +179,13 @@ module Veritable
       ct.each { |ct|
         if rows.empty?
           if batch.size > 0
-            post link('rows'), {'action' => action, 'rows' => batch}
+            post(link('rows'), {'action' => action, 'rows' => batch})
           end
           break
         end
         batch.push rows.shift
         if ct == per_page
-          post link('rows'), {'action' => action, 'rows' => batch}
+          post(link('rows'), {'action' => action, 'rows' => batch})
           batch = Array.new()
         end
       }
@@ -194,10 +195,10 @@ module Veritable
   class Analysis
     include VeritableResource
 
-    def update; @doc = get link 'self'; end
+    def update; @doc = get(link('self')); end
 
     alias :rest_delete :delete
-    def delete; rest_delete link 'self'; end
+    def delete; rest_delete(link('self')); end
 
     def schema; Schema.new(get(link('schema'))); end
 
@@ -324,7 +325,7 @@ module Veritable
     end
   end
 
-  class Prediction
+  class Prediction < Hash
     attr_reader :request
     attr_reader :distribution
     attr_reader :schema
@@ -334,17 +335,17 @@ module Veritable
       @request = request
       @distribution = distribution
       @schema = Schema.new(schema)
-      @uncertainty = Hash.new {|hash, k| hash[k] = self.send(:calculate_uncertainty, k)}
-      @point_estimates = Hash.new {|hash, k| hash[k] = self.send(:point_estimate, k)}
+      @uncertainty = Hash.new()
+
       request.each { |k,v|
-        if not v.nil?
-          @point_estimates[k] = v
+        if v.nil?
+          self[k] = point_estimate k
+          @uncertainty[k] = calculate_uncertainty k
+        else
+          self[k] = v
           @uncertainty[k] = 0.0
         end
       }
-    end
-
-    define_method :[] do |k| @point_estimates[k]
     end
     
     def prob_within(column, range)
@@ -395,7 +396,7 @@ module Veritable
     end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::Prediction request='#{request}'>"; end
+    def to_s; "<Veritable::Prediction #{super}>"; end
 
     private
 

@@ -65,11 +65,10 @@ module Veritable
         end
       end
 
-      def split_rows(rows, frac=0.5)
+      def split_rows(rows, frac)
         rows = rows.to_a
         n = rows.size
-        inds = 0...n
-        inds.shuffle!
+        inds = (0...n).to_a.shuffle
         border_ind = (n * frac).floor.to_i
         train_dataset = (0...border_ind).collect {|i| rows[inds[i]] }
         test_dataset = (border_ind...n).collect {|i| rows[inds[i]] }
@@ -81,7 +80,25 @@ module Veritable
       end
 
       def make_schema(schema_rule, opts={})
-        # construct an analysis schema from a schema rule (a list of lists)
+		if ((not opts.has_key?('headers')) and (not opts.has_key?('rows')))
+			raise VeritableError.new("Either :headers or :rows must be provided!")
+		end
+		headers = opts.has_key?('headers') ? opts['headers'] : nil
+		if headers.nil?
+			headers = Set.new
+			opts['rows'].each {|row| headers.merge(row.keys)}
+			headers = headers.to_a.sort
+		end
+		schema = {}
+		headers.each do |c|
+			schema_rule.each do |r, t|
+				if r === c
+					schema[c] = t
+					break
+				end
+			end
+		end
+		return Veritable::Schema.new(schema)
       end
 
       def write_csv(rows, filename)
@@ -101,19 +118,19 @@ module Veritable
         rows = CSV.read(filename)
         header = rows.shift
         header = header.collect {|h| (h == id_col ? '_id' : h).strip}
-		if header.include?('_id')
-		  id_col = '_id'
-		end
-		rid = 0
+        if header.include?('_id')
+          id_col = '_id'
+        end
+        rid = 0
         rows = rows.collect do |raw_row|
-		  rid = rid + 1
+          rid = rid + 1
           row = {}
           (0...raw_row.length).each do |i|
             row[header[i]] = ( na_vals.include?(raw_row[i]) ? nil : raw_row[i] )
           end
-		  if id_col.nil? 
-		    row['_id'] = rid.to_s
-		  end
+          if id_col.nil? 
+            row['_id'] = rid.to_s
+          end
           row
         end
         return rows
@@ -405,7 +422,7 @@ module Veritable
             raise VeritableError.new("Validate -- column #{c} does not have any values", {'col' => c}) if fill == 0
           }
         end
-        rows
+        nil
       end
     end
   end

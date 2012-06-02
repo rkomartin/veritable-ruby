@@ -12,6 +12,22 @@ class VeritableTestUtils < Test::Unit::TestCase
     })
   end
 
+  def test_split_rows
+    rows = [{'_id' => '1', 'ColInt' => 3},
+            {'_id' => '2', 'ColInt' => 4},
+            {'_id' => '3', 'ColInt' => 4},
+            {'_id' => '4', 'ColInt' => 4},
+            {'_id' => '5', 'ColInt' => 4},
+            {'_id' => '6', 'ColInt' => 4},
+            {'_id' => '7', 'ColInt' => 4},
+            {'_id' => '8', 'ColInt' => 4},
+            {'_id' => '9', 'ColInt' => 4},
+            {'_id' => '10', 'ColInt' => 4}]
+	srows = Veritable::Util.split_rows(rows, 0.3)
+	assert srows[0].length == 3
+	assert srows[1].length == 7
+  end
+  
   def test_write_read_csv
     file = Tempfile.new('vtest')
     file.close
@@ -89,7 +105,81 @@ class VeritableTestUtils < Test::Unit::TestCase
       file.unlink
     end
   end
+
+  def test_make_schema_headers
+    ref_schema = {'CatA' => {'type' => 'categorical'},
+                 'CatB' => {'type' => 'categorical'},
+                 'IntA' => {'type' => 'count'},
+                 'IntB' => {'type' => 'count'}}
+    headers = ['IntA', 'IntB', 'CatA', 'CatB', 'Foo']
+    schemaRule = [[/Int.*/, {'type' => 'count'}],
+                  [/Cat.*/, {'type' => 'categorical'}]]
+    schema = Veritable::Util.make_schema(schemaRule, {'headers' => headers})
+    assert schema == ref_schema
+  end
+
+  def test_make_schema_rows
+    ref_schema = {'CatA' => {'type' => 'categorical'},
+                 'CatB' => {'type' => 'categorical'},
+                 'IntA' => {'type' => 'count'},
+                 'IntB' => {'type' => 'count'}}
+	rows = [{'CatA' => nil, 'CatB' => nil, 'IntA' => nil, 'IntB' => nil, 'Foo' => nil}]
+    schemaRule = [[/Int.*/, {'type' => 'count'}],
+                  [/Cat.*/, {'type' => 'categorical'}]]
+    schema = Veritable::Util.make_schema(schemaRule, {'rows' => rows})
+    assert schema == ref_schema
+  end
   
+  def test_make_schema_noarg_fail
+    ref_schema = {'CatA' => {'type' => 'categorical'},
+                 'CatB' => {'type' => 'categorical'},
+                 'IntA' => {'type' => 'count'},
+                 'IntB' => {'type' => 'count'}}
+    schemaRule = [[/Int.*/, {'type' => 'count'}],
+                  [/Cat.*/, {'type' => 'categorical'}]]
+	assert_raise VeritableError do
+		schema = Veritable::Util.make_schema(schemaRule, {})
+	end
+  end
+
+  def test_missing_schema_type_fail
+    bschema = {'ColInt' => {}, 'ColFloat' => {'type' => 'real'}}
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], bschema)
+	end
+	assert_raise VeritableError do
+        Veritable::Util.clean_data([], bschema)
+	end
+  end
+
+  def test_bad_schema_type_fail
+    bschema = {'ColInt' => {'type' => 'jello'}, 'ColFloat' => {'type' => 'real'}}
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], bschema)
+	end
+	assert_raise VeritableError do
+        Veritable::Util.clean_data([], bschema)
+	end
+  end
+  
+  def test_invalid_schema_underscore
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], {'_foo' => {'type' => 'count'}})
+	end
+  end
+
+  def test_invalid_schema_dot
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], {'b.d' => {'type' => 'count'}})
+	end
+  end
+
+  def test_invalid_schema_dollar
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], {'b$d' => {'type' => 'count'}})
+	end
+  end
+
   
   def test_data_valid_rows
     refrows = [
