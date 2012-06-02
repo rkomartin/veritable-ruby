@@ -203,12 +203,12 @@ module Veritable
       def urlencode(k)
         URI.escape(k.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
-	  
-	  def to_integer(v)
-	    return v if v.is_a? Fixnum
-		raise VeritableError.new("") unless /\A[+-]?\d+?(\.0*)?\Z/ === v
-		return Integer(v)
-	  end
+
+      def to_integer(v)
+        return v if v.is_a? Fixnum
+        v.gsub!(/\A([+-]?\d+?)\.0*?\Z/, '\1')
+        Integer(v)
+      end
 	  	  
       def validate(rows, schema, opts)
         schema = Veritable::Schema.new(schema) unless schema.is_a? Veritable::Schema
