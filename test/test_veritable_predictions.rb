@@ -9,7 +9,7 @@ class TrueClass; include Boolean; end
 class FalseClass; include Boolean; end
 
 class VeritablePredictionsTest < Test::Unit::TestCase
-  def setup
+  def initialize(*args)
     @api = Veritable.connect
     @t = @api.create_table
     @t.batch_upload_rows [
@@ -39,6 +39,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
       'bool' => {'type' => 'boolean'}
     })
     @a2 = @t2.create_analysis @s2
+    super(*args)
   end
 
   def test_make_prediction
