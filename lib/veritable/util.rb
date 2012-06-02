@@ -405,7 +405,7 @@ module Veritable
             raise VeritableError.new("Validate -- column #{c} does not have any values", {'col' => c}) if fill == 0
           }
         end
-        rows
+        nil
       end
     end
   end
