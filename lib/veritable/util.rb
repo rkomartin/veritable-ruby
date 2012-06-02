@@ -101,19 +101,19 @@ module Veritable
         rows = CSV.read(filename)
         header = rows.shift
         header = header.collect {|h| (h == id_col ? '_id' : h).strip}
-		if header.include?('_id')
-		  id_col = '_id'
-		end
-		rid = 0
+        if header.include?('_id')
+          id_col = '_id'
+        end
+        rid = 0
         rows = rows.collect do |raw_row|
-		  rid = rid + 1
+          rid = rid + 1
           row = {}
           (0...raw_row.length).each do |i|
             row[header[i]] = ( na_vals.include?(raw_row[i]) ? nil : raw_row[i] )
           end
-		  if id_col.nil? 
-		    row['_id'] = rid.to_s
-		  end
+          if id_col.nil? 
+            row['_id'] = rid.to_s
+          end
           row
         end
         return rows
@@ -203,13 +203,13 @@ module Veritable
       def urlencode(k)
         URI.escape(k.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
-	  
-	  def to_integer(v)
-	    return v if v.is_a? Fixnum
-		raise VeritableError.new("") unless /\A[+-]?\d+?(\.0*)?\Z/ === v
-		return Integer(v)
-	  end
-	  	  
+    
+      def to_integer(v)
+        return v if v.is_a? Fixnum
+        raise VeritableError.new("") unless /\A[+-]?\d+?(\.0*)?\Z/ === v
+        return Integer(v)
+      end
+        
       def validate(rows, schema, opts)
         schema = Veritable::Schema.new(schema) unless schema.is_a? Veritable::Schema
 
