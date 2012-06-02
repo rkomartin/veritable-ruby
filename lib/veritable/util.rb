@@ -81,7 +81,25 @@ module Veritable
       end
 
       def make_schema(schema_rule, opts={})
-        # construct an analysis schema from a schema rule (a list of lists)
+		if ((not opts.has_key?('headers')) and (not opts.has_key?('rows')))
+			raise VeritableError.new("Either :headers or :rows must be provided!")
+		end
+		headers = opts.has_key?('headers') ? opts['headers'] : nil
+		if headers.nil?
+			headers = Set.new
+			opts['rows'].each {|row| headers.merge(row.keys)}
+			headers = headers.to_a.sort
+		end
+		schema = {}
+		headers.each do |c|
+			schema_rule.each do |r, t|
+				if r === c
+					schema[c] = t
+					break
+				end
+			end
+		end
+		return Veritable::Schema.new(schema)
       end
 
       def write_csv(rows, filename)
