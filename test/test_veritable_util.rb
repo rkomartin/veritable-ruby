@@ -126,6 +126,45 @@ class VeritableTestUtils < Test::Unit::TestCase
 		schema = Veritable::Util.make_schema(schemaRule, {})
 	end
   end
+
+  def test_missing_schema_type_fail
+    bschema = {'ColInt' => {}, 'ColFloat' => {'type' => 'real'}}
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], bschema)
+	end
+	assert_raise VeritableError do
+        Veritable::Util.clean_data([], bschema)
+	end
+  end
+
+  def test_bad_schema_type_fail
+    bschema = {'ColInt' => {'type' => 'jello'}, 'ColFloat' => {'type' => 'real'}}
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], bschema)
+	end
+	assert_raise VeritableError do
+        Veritable::Util.clean_data([], bschema)
+	end
+  end
+  
+  def test_invalid_schema_underscore
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], {'_foo' => {'type' => 'count'}})
+	end
+  end
+
+  def test_invalid_schema_dot
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], {'b.d' => {'type' => 'count'}})
+	end
+  end
+
+  def test_invalid_schema_dollar
+	assert_raise VeritableError do
+        Veritable::Util.validate_data([], {'b$d' => {'type' => 'count'}})
+	end
+  end
+
   
   def test_data_valid_rows
     refrows = [
