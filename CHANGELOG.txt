@@ -1,3 +1,3 @@
-veritable-ruby 0.9.3 - May 29, 2012
+veritable-ruby 0.1.0 - June 1, 2012
     * Initial release
 
