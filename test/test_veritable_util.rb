@@ -90,7 +90,42 @@ class VeritableTestUtils < Test::Unit::TestCase
       file.unlink
     end
   end
+
+  def test_make_schema_headers
+    ref_schema = {'CatA' => {'type' => 'categorical'},
+                 'CatB' => {'type' => 'categorical'},
+                 'IntA' => {'type' => 'count'},
+                 'IntB' => {'type' => 'count'}}
+    headers = ['IntA', 'IntB', 'CatA', 'CatB', 'Foo']
+    schemaRule = [[/Int.*/, {'type' => 'count'}],
+                  [/Cat.*/, {'type' => 'categorical'}]]
+    schema = Veritable::Util.make_schema(schemaRule, {'headers' => headers})
+    assert schema == ref_schema
+  end
+
+  def test_make_schema_rows
+    ref_schema = {'CatA' => {'type' => 'categorical'},
+                 'CatB' => {'type' => 'categorical'},
+                 'IntA' => {'type' => 'count'},
+                 'IntB' => {'type' => 'count'}}
+	rows = [{'CatA' => nil, 'CatB' => nil, 'IntA' => nil, 'IntB' => nil, 'Foo' => nil}]
+    schemaRule = [[/Int.*/, {'type' => 'count'}],
+                  [/Cat.*/, {'type' => 'categorical'}]]
+    schema = Veritable::Util.make_schema(schemaRule, {'rows' => rows})
+    assert schema == ref_schema
+  end
   
+  def test_make_schema_noarg_fail
+    ref_schema = {'CatA' => {'type' => 'categorical'},
+                 'CatB' => {'type' => 'categorical'},
+                 'IntA' => {'type' => 'count'},
+                 'IntB' => {'type' => 'count'}}
+    schemaRule = [[/Int.*/, {'type' => 'count'}],
+                  [/Cat.*/, {'type' => 'categorical'}]]
+	assert_raise VeritableError do
+		schema = Veritable::Util.make_schema(schemaRule, {})
+	end
+  end
   
   def test_data_valid_rows
     refrows = [
