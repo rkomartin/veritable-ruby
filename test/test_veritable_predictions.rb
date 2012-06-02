@@ -1,8 +1,6 @@
 # encoding: utf-8
 
-require 'multi_json'
-require 'test/unit'
-require 'veritable'
+require 'helper'
 
 module Boolean; end
 class TrueClass; include Boolean; end
