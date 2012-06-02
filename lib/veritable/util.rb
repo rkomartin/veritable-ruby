@@ -73,7 +73,7 @@ module Veritable
         border_ind = (n * frac).floor.to_i
         train_dataset = (0...border_ind).collect {|i| rows[inds[i]] }
         test_dataset = (border_ind...n).collect {|i| rows[inds[i]] }
-        return train_dataset, test_dataset
+        return [train_dataset, test_dataset]
       end
 
       def validate_schema(schema)
@@ -97,15 +97,23 @@ module Veritable
         end
       end
 
-      def read_csv(filename, id_col='_id', na_vals=[''])
+      def read_csv(filename, id_col=nil, na_vals=[''])
         rows = CSV.read(filename)
         header = rows.shift
         header = header.collect {|h| (h == id_col ? '_id' : h).strip}
+		if header.include?('_id')
+		  id_col = '_id'
+		end
+		rid = 0
         rows = rows.collect do |raw_row|
+		  rid = rid + 1
           row = {}
           (0...raw_row.length).each do |i|
             row[header[i]] = ( na_vals.include?(raw_row[i]) ? nil : raw_row[i] )
           end
+		  if id_col.nil? 
+		    row['_id'] = rid.to_s
+		  end
           row
         end
         return rows
