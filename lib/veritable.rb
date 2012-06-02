@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'openssl'
 
 require 'veritable/api'
@@ -7,13 +6,8 @@ require 'veritable/errors'
 require 'veritable/util'
 require 'veritable/version'
 
-gem 'rest-client', '~> 1.4'
 require 'rest_client'
-
-gem "uuid", "~> 2.3.5"
 require 'uuid'
-
-gem "multi_json"
 require 'multi_json'
 
 module Veritable
