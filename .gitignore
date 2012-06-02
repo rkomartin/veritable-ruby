@@ -12,6 +12,7 @@ test/tmp
 test/version_tmp
 tmp
 rvm.env
+Gemfile.lock
 
 # YARD artifacts
 .yardoc

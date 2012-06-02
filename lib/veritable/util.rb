@@ -65,11 +65,10 @@ module Veritable
         end
       end
 
-      def split_rows(rows, frac=0.5)
+      def split_rows(rows, frac)
         rows = rows.to_a
         n = rows.size
-        inds = 0...n
-        inds.shuffle!
+        inds = (0...n).to_a.shuffle
         border_ind = (n * frac).floor.to_i
         train_dataset = (0...border_ind).collect {|i| rows[inds[i]] }
         test_dataset = (border_ind...n).collect {|i| rows[inds[i]] }

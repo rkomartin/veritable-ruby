@@ -13,6 +13,22 @@ class VeritableTestUtils < Test::Unit::TestCase
     })
   end
 
+  def test_split_rows
+    rows = [{'_id' => '1', 'ColInt' => 3},
+            {'_id' => '2', 'ColInt' => 4},
+            {'_id' => '3', 'ColInt' => 4},
+            {'_id' => '4', 'ColInt' => 4},
+            {'_id' => '5', 'ColInt' => 4},
+            {'_id' => '6', 'ColInt' => 4},
+            {'_id' => '7', 'ColInt' => 4},
+            {'_id' => '8', 'ColInt' => 4},
+            {'_id' => '9', 'ColInt' => 4},
+            {'_id' => '10', 'ColInt' => 4}]
+	srows = Veritable::Util.split_rows(rows, 0.3)
+	assert srows[0].length == 3
+	assert srows[1].length == 7
+  end
+  
   def test_write_read_csv
     file = Tempfile.new('vtest')
     file.close
