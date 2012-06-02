@@ -15,24 +15,24 @@ module Veritable
         query_string = Util.query_params(params)
         url += "?#{query_string}"
       end
-      request(:get, url, payload=nil, headers=headers)
+      request(:get, url, nil, headers)
     end
 
     def post(url, payload, headers={})
       payload = MultiJson.encode(payload)
       headers = headers.merge({:content_type => 'application/json'})
-      request(:post, url, payload=payload, headers=headers)
+      request(:post, url, payload, headers)
     end
 
     def put(url, payload, headers={})
       payload = MultiJson.encode(payload)
       headers = headers.merge({:content_type => 'application/json'})
-      request(:put, url, payload=payload, headers=headers)
+      request(:put, url, payload, headers)
     end
 
     def delete(url, headers={})
       begin
-        request(:delete, url, payload=nil, headers=headers)
+        request(:delete, url, nil, headers)
       rescue VeritableError => e
         if not e.respond_to? :http_code or not e.http_code == "404 Resource Not Found"
           raise e
