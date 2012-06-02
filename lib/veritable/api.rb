@@ -245,7 +245,7 @@ module Veritable
       update if running?
       if succeeded?
         Cursor.new(
-         {'collection' => "#{link('analyses')}/#{column_id}",
+         {'collection' => "#{link('related')}/#{column_id}",
           'start' => opts['start'],
           'limit' => opts['limit']}.update(@opts))
       elsif running?
@@ -346,7 +346,7 @@ module Veritable
 
     define_method :[] do |k| @point_estimates[k]
     end
-
+    
     def prob_within(column, range)
       col_type = schema.type column
       Veritable::Util.check_datatype(col_type, "Probability within -- ")
@@ -393,6 +393,9 @@ module Veritable
         [lo, hi]
       end
     end
+
+    def inspect; to_s; end
+    def to_s; "#<Veritable::Prediction request='#{request}'>"; end
 
     private
 
