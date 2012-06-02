@@ -396,7 +396,7 @@ module Veritable
     end
 
     def inspect; to_s; end
-    def to_s; "#<Veritable::Prediction request='#{request}'>"; end
+    def to_s; "<Veritable::Prediction #{super}>"; end
 
     private
 
