@@ -38,6 +38,60 @@ class VeritableTestUtils < Test::Unit::TestCase
     end
   end
 
+  def test_read_csv_map_id
+    file = Tempfile.new('vtest')
+    file.close
+    begin
+      refrows = [{'myID' => '7', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a'},
+                 {'myID' => '8', 'ColInt' => 4, 'ColCat' => 'b', 'ColBool' => false},
+                 {'myID' => '9'}]
+      Veritable::Util.write_csv(refrows, file.path)
+      testrows = Veritable::Util.read_csv(file.path, 'myID')
+      cschema = {
+          'ColInt' => {'type' => 'count'},
+          'ColFloat' => {'type' => 'real'},
+          'ColCat' => {'type' => 'categorical'},
+          'ColBool' => {'type' => 'boolean'}
+          }
+      Veritable::Util.clean_data(testrows, cschema)
+      assert testrows.length == refrows.length
+      (0...testrows.length).each do |i|
+		  refrows[i]['_id'] = refrows[i]['myID']
+		  refrows[i].delete('myID')
+          assert testrows[i] == refrows[i]
+      end
+    ensure
+      file.unlink
+    end
+  end
+
+  def test_read_csv_assign_id
+    file = Tempfile.new('vtest')
+    file.close
+    begin
+      refrows = [{'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a'},
+                 {'ColInt' => 4, 'ColCat' => 'b', 'ColBool' => false},
+                 {}]
+      Veritable::Util.write_csv(refrows, file.path)
+      testrows = Veritable::Util.read_csv(file.path)
+      cschema = {
+          'ColInt' => {'type' => 'count'},
+          'ColFloat' => {'type' => 'real'},
+          'ColCat' => {'type' => 'categorical'},
+          'ColBool' => {'type' => 'boolean'}
+          }
+      Veritable::Util.clean_data(testrows, cschema)
+      assert testrows.length == refrows.length
+      (0...testrows.length).each do |i|
+		  refrows[i]['_id'] = (i+1).to_s
+          assert testrows[i] == refrows[i]
+      end
+    ensure
+      file.unlink
+    end
+  end
+  
+  
   def test_data_valid_rows
     refrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
