@@ -6,11 +6,11 @@ require 'veritable'
 
 INVALIDS = ['éléphant', '374.34', 'ajfh/d/sfd@#$', 'きんぴらごぼう', '', ' foo', 'foo ', ' foo ', "foo\n", "foo\nbar", 3, 1.414, false, true, '_underscore']
 
-
 class VeritableAPITest < Test::Unit::TestCase
-  def setup
+  def initialize(*args)
     @api = Veritable.connect
     @tid = Veritable::Util.make_table_id
+    super(*args)    
   end
 
   def test_api_root

@@ -6,8 +6,12 @@ require 'veritable'
 INVALIDS = ['éléphant', '374.34', 'ajfh/d/sfd@#$', 'きんぴらごぼう', '', ' foo', 'foo ', ' foo ', "foo\n", "foo\nbar", 3, 1.414, false, true, '_underscore']
 
 class VeritableRowOpTest < Test::Unit::TestCase
-  def setup
+  def initialize(*args)
     @api = Veritable.connect
+    super(*args)
+  end
+  
+  def setup
     @t = @api.create_table
   end
 
