@@ -12,7 +12,7 @@ Rake::TestTask.new do |t|
 end
 
 Rake::RDocTask.new do |rdoc|
-  files = ['README.md', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc', 'test/*.rb']
+  files = ['README.md', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
   rdoc.rdoc_files.add(files)
   rdoc.main = 'README.md'
   rdoc.title = 'veritable-ruby Documentation'
