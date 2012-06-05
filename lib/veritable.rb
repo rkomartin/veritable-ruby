@@ -13,44 +13,50 @@ require 'multi_json'
 # The main module for the Veritable client
 #
 # ==== Module methods
-# Veritable.connect is the main entry point
+# Veritable.connect is the main entry point.
 #
 # ==== Classes
-# Veritable::API represents a single user's tables and settings
-# Veritable::Table, Veritable::Analysis, and Veritable::Prediction represent API resources
-# Veritable::Schema represents schemas for Veritable analyses
-# Collections of API resources are returned as instances of Veritable::Cursor, an Enumerable
-# All errors are instances of Veritable::VeritableError
+# Veritable::API represents a single user's tables and settings.
+#
+# Veritable::Table, Veritable::Analysis, and Veritable::Prediction represent API resources.
+#
+# Veritable::Schema represents schemas for Veritable analyses.
+#
+# Collections of API resources are returned as instances of Veritable::Cursor, an Enumerable.
+#
+# All errors are instances of Veritable::VeritableError.
 #
 # ==== Modules
-# The Veritable::Connection module encapsulates the HTTP logic
-# The Veritable::Util module includes some helper methods for working with datasets
-# The Veritable::VeritableResource and Veritable::VeritableObject modules are internal abstractions
+# The Veritable::Connection module encapsulates the HTTP logic.
+#
+# The Veritable::Util module includes some helper methods for working with datasets.
+#
+# The Veritable::VeritableResource and Veritable::VeritableObject modules are internal abstractions.
 # 
 # See also: https://dev.priorknowledge.com/docs/client/ruby
 module Veritable
 
-  # The HTTP User-Agent header
+  # The HTTP User-Agent header used by the client library.
   USER_AGENT = 'veritable-ruby ' + VERSION
 
-  # The default base URL for the Veritable API
+  # The default base URL for the Veritable API server.
   BASE_URL = "https://api.priorknowledge.com"
   
   # The main entry point to the Veritable API
   #
-  # ==== Returns
-  # An instance of Veritable::API
+  # ==== Arguments
+  # * +opts+ -- a Hash containing options for the connection. Possible keys include:
+  #   - +:api_key+ -- the Veritable API key to use. If not set, defaults to <tt>ENV['VERITABLE_KEY']</tt>
+  #   - +:api_base_url+ -- the base URL of the Veritable API. If not set, defaults to <tt>ENV['VERITABLE_URL']</tt> or BASE_URL
+  #   - +:ssl_verify+ -- if +true+, the SSL certificate of the API server will be verified.
+  #   - +:enable_gzip+ -- if +true+, requests to the API server will be gzipped.
   #
   # ==== Raises
   # A Veritable::VeritableError if no Veritable API server is found at the indicated URL.
-  #
-  # ==== Arguments
-  # * +opts+ -- a Hash containing options for the connection. Possible keys include:
-  #   - +:api_key+ -- the Veritable API key to use. If not set, defaults to +ENV['VERITABLE_KEY']+
-  #   - +:api_base_url+ -- the base URL of the Veritable API. If not set, defaults to +ENV['VERITABLE_URL']+ or +Veritable.BASE_URL+
-  #   - +:ssl_verify+ -- if +true+, the SSL certificate of the API server will be verified.
-  #   - +:enable_gzip+ -- if +true+, requests to the API server will be gzipped.
   # 
+  # ==== Returns
+  # An instance of Veritable::API.
+  #
   # See also: https://dev.priorknowledge.com/docs/client/ruby
   def self.connect(opts={})
     opts[:api_key] = opts[:api_key] || ENV['VERITABLE_KEY']

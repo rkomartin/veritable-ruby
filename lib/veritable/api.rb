@@ -6,7 +6,7 @@ require 'veritable/util'
 
 module Veritable
 
-  # Represents the API resources available to a user of the Veritable API
+  # Represents the resources available to a user of the Veritable API.
   #
   # Users should not initialize directly; use Veritable.connect as the entry point.
   #
@@ -26,7 +26,7 @@ module Veritable
     # Gets the root of the api
     #
     # ==== Returns
-    # A Hash with the keys +"status"+ (should be equal to +"SUCCESS"+) and +"entropy"+ (a random Float).
+    # A Hash with the keys <tt>"status"</tt> (should be equal to <tt>"SUCCESS"</tt>) and <tt>"entropy"</tt> (a random Float).
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def root; get(""); end
@@ -34,7 +34,7 @@ module Veritable
     # Gets the user-specific API limits
     #
     # ==== Returns
-    # A Hash with the keys +"max_categories"+, +"max_row_batch_count"+, +"max_string_length"+, +"predictions_max_cols"+, +"predictions_max_count"+, +"schema_max_cols"+, +"table_max_cols_per_row"+, +"table_max_rows"+, and +"table_max_running_analyses"+, representing the user's current API limits.
+    # A Hash with the keys <tt>"max_categories"</tt>, <tt>"max_row_batch_count"</tt>, <tt>"max_string_length"</tt>, <tt>"predictions_max_cols"</tt>, <tt>"predictions_max_count"</tt>, <tt>"schema_max_cols"</tt>, <tt>"table_max_cols_per_row"</tt>, <tt>"table_max_rows"</tt>, and <tt>"table_max_running_analyses"</tt>, representing the user's current API limits.
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def limits; get("user/limits"); end
@@ -43,8 +43,8 @@ module Veritable
     #
     # ==== Arguments
     # * +opts+ A Hash optionally containing the keys
-    #   - +"start"+ -- the table id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first table id.
-    #   - +"limit"+ -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #   - <tt>"start"</tt> -- the table id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first table id.
+    #   - <tt>"limit"</tt> -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
     #
     # ==== Returns
     # A Veritable::Cursor. The cursor will return Veritable::Table objects representing the available data tables, in lexicographic order of their unique ids.
@@ -70,9 +70,9 @@ module Veritable
     # Creates a new table
     #
     # ==== Arguments
-    # +table_id+ -- the unique String id of the new table. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of a +table_id+. Default is +nil+, in which case a new id will be automatically generated.
-    # +description+ -- a String describing the table. Default is +''+.
-    # +force+ -- if true, will overwrite any existing table with the same id. Default is +false+.
+    # * +table_id+ -- the unique String id of the new table. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of a +table_id+. Default is +nil+, in which case a new id will be automatically generated.
+    # * +description+ -- a String describing the table. Default is <tt>''</tt>.
+    # * +force+ -- if true, will overwrite any existing table with the same id. Default is +false+.
     #
     # ==== Raises
     # A Veritable::VeritableError if +force+ is not true and there is an existing table with the same id.
@@ -191,8 +191,8 @@ module Veritable
     #
     # ==== Arguments
     # * +opts+ A Hash optionally containing the keys
-    #   - +"start"+ -- the row id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first table id.
-    #   - +"limit"+ -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #   - <tt>"start"</tt> -- the row id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first table id.
+    #   - <tt>"limit"</tt> -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
     #
     # ==== Returns
     # A Veritable::Cursor. The cursor will return Hashes representing the rows, in lexicographic order of their unique ids.
@@ -207,10 +207,10 @@ module Veritable
     # Uploads a new row to the table
     #
     # ==== Arguments
-    # * +row+ -- a Hash repreenting the data in the row, whose keys are column ids as Strings. Must contain the key +"_id"+, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
+    # * +row+ -- a Hash repreenting the data in the row, whose keys are column ids as Strings. Must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
     #
     # ==== Raises
-    # A Veritable::VeritableError if the row Hash is missing the +"_id"+ field or is improperly formed.
+    # A Veritable::VeritableError if the row Hash is missing the <tt>"_id"</tt> field or is improperly formed.
     #
     # ==== Returns
     # +nil+ on success.
@@ -225,7 +225,7 @@ module Veritable
     # Batch uploads multiple rows to the table
     #
     # ==== Arguments
-    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key +"_id"+, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
+    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
     # * +per_page+ -- optionally controls the number of rows to upload in each batch. Defaults to +100+.
     #
     # ==== Returns
@@ -248,7 +248,7 @@ module Veritable
     # Batch deletes a list of rows from the table
     #
     # ==== Arguments
-    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key +"_id"+, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
+    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
     # * +per_page+ -- optionally controls the number of rows to delete in each batch. Defaults to +100+.
     #
     # ==== Returns
@@ -280,8 +280,8 @@ module Veritable
     #
     # ==== Arguments
     # * +opts+ A Hash optionally containing the keys
-    #   - +"start"+ -- the analysis id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first analysis id.
-    #   - +"limit"+ -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #   - <tt>"start"</tt> -- the analysis id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first analysis id.
+    #   - <tt>"limit"</tt> -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
     #
     # ==== Returns
     # A Veritable::Cursor. The cursor will return Veritable::Analysis objects, in lexicographic order of their unique ids.
@@ -307,13 +307,13 @@ module Veritable
     # Creates a new analysis
     #
     # ==== Arguments
-    # +schema+ -- a schema describing the analysis to perform. Must be a Veritable::Schema object or a Hash of the form:
-    #     +{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}+
-    # where the specified datatype for each column is one of +['real', 'boolean', 'categorical', 'count']+ and is valid for the column.
-    # +analysis_id -- the unique String id of the new analysis. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of an +analysis_id+. Default is +nil+, in which case a new id will be automatically generated.
-    # +description+ -- a String describing the analysis. Default is +''+.
-    # +force+ -- if true, will overwrite any existing analysis with the same id. Default is +false+.
-    # +analysis_type+ -- defaults to, and must be equal to, +"veritable"+
+    # * +schema+ -- a schema describing the analysis to perform. Must be a Veritable::Schema object or a Hash of the form:
+    #     <tt>{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}</tt>
+    # where the specified datatype for each column is one of <tt>['real', 'boolean', 'categorical', 'count']</tt> and is valid for the column.
+    # * +analysis_id -- the unique String id of the new analysis. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of an +analysis_id+. Default is +nil+, in which case a new id will be automatically generated.
+    # * +description+ -- a String describing the analysis. Default is <tt>''</tt>.
+    # * +force+ -- if true, will overwrite any existing analysis with the same id. Default is +false+.
+    # * +analysis_type+ -- defaults to, and must be equal to, <tt>"veritable"</tt>.
     #
     # ==== Raises
     # A Veritable::VeritableError if +force+ is not true and there is an existing table with the same id.
@@ -356,7 +356,7 @@ module Veritable
     # Checks if an analysis with the given unique id exists
     #
     # ==== Arguments
-    # +analysis_id+ --- the unique id of the table to check
+    # * +analysis_id+ --- the unique id of the table to check
     #
     # ==== Returns
     # +true+ or +false+, as appropriate.
@@ -425,12 +425,12 @@ module Veritable
   # * +description+ -- the String description of the analysis
   # * +created_at+ -- a String timestamp recording the time the analysis was created
   # * +finished_at+ -- a String timestamp recording the time the analysis completd
-  # * +state+ -- the state of the analysis, one of +"running"+, +"succeeded"+, and +"failed"+
-  # * +running?+ -- +true+ if +state+ is +"running"+
-  # * +succeeded?+ -- ++true+ if +state+ is +"succeeded"+
-  # * +failed?+ -- +true+ if +state+ is +"failed"+
-  # * +error+ -- a Hash containing details of the error that occurred, if +state+ is +"failed"+, otherwise +nil+
-  # * +progress+ -- a Hash containing details of the analysis progress, if +state+ is +"running"+, otherwise +nil+ 
+  # * +state+ -- the state of the analysis, one of <tt>["running", "succeeded", "failed"]</tt>
+  # * +running?+ -- +true+ if +state+ is <tt>"running"</tt>
+  # * +succeeded?+ -- ++true+ if +state+ is <tt>"succeeded"</tt>
+  # * +failed?+ -- +true+ if +state+ is <tt>"failed"</tt>
+  # * +error+ -- a Hash containing details of the error that occurred, if +state+ is <tt>"failed"</tt>, otherwise +nil+
+  # * +progress+ -- a Hash containing details of the analysis progress, if +state+ is <tt>"running"</tt>, otherwise +nil+ 
   # * +schema+ -- a Veritable::Schema describing the columns included in the analysis
   #
   # ==== Methods
@@ -575,22 +575,22 @@ module Veritable
 
     # The state of the analysis
     #
-    # One of +"running"+, +"succeeded"+, or +"failed"+.
+    # One of <tt>["running", "succeeded", "failed"]</tt>
     def state; @doc['state']; end
 
-    # +true+ if +state+ is +"running"+, otherwise +false+
+    # +true+ if +state+ is <tt>"running"</tt>, otherwise +false+
     def running?; state == 'running'; end
 
-    # +true+ if +state+ is +"succeeded"+, otherwise +false+
+    # +true+ if +state+ is <tt>"succeeded"</tt>, otherwise +false+
     def succeeded?; state == 'succeeded'; end
 
-    # +true+ if +state+ is +"failed"+, otherwise +false+
+    # +true+ if +state+ is <tt>"failed"</tt>, otherwise +false+
     def failed?; state == 'failed'; end
 
-    # A Hash containing details of the error if +state+ is +"failed"+, otherwise +nil+
+    # A Hash containing details of the error if +state+ is <tt>"failed"</tt>, otherwise +nil+
     def error; state == 'failed' ? @doc['error'] : nil; end
 
-    # A Hash containing details of the analysis progress if +state+ is +"running"+, otherwise +nil+
+    # A Hash containing details of the analysis progress if +state+ is <tt>"running"</tt>, otherwise +nil+
     def progress; state == 'running' ? @doc['progress'] : nil; end
 
     # The String description of the analysis
@@ -612,8 +612,8 @@ module Veritable
     #
     # ==== Arguments
     # * +data+ -- the data for the schema as a Hash with the form:
-    #     +{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}+
-    # where the datatype must be one of +"real"+, +"categorical"+, +"count"+, or +"boolean"+.
+    #     <tt>{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}</tt>
+    # where the datatype must be one of <tt>["real", "categorical", "count", "boolean"]</tt>
     # * +subset+ -- a Hash or Array whose keys will be used to limit the columns present in the Schema created from the input +data+
     #
     # ==== Returns
@@ -644,7 +644,7 @@ module Veritable
 
     # Convenience accessor for the type of a Schema column
     #
-    # Running +schema.type(column)+ is equivalent to +schema[column]['type']+
+    # Running <tt>schema.type(column)</tt> is sugar for <tt>schema[column]['type']</tt>
     #
     # ==== Arguments
     # +column+ -- the id of the column whose type we are retrieving
@@ -735,7 +735,7 @@ module Veritable
 
     # Initializes a Veritable::Prediction
     #
-    # Users should not call directly. Instead, call the predict method of Veritable::Analysis.
+    # Users should not call directly. Instead, call Veritable::Analysis#predict.
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def initialize(request, distribution, schema)
@@ -761,7 +761,7 @@ module Veritable
     #
     # ==== Arguments
     # column -- the column for which to calculate probabilities
-    # range -- a representation of the range for which to calculate probabilities. For real and count columns, this is an Array of +[start, end]+ representing a closed interval. For boolean and categorical columns, this is an Array of discrete values.
+    # range -- a representation of the range for which to calculate probabilities. For real and count columns, this is an Array of <tt>[start, end]</tt> representing a closed interval. For boolean and categorical columns, this is an Array of discrete values.
     #
     # ==== Returns
     # A probability as a Float
@@ -799,11 +799,11 @@ module Veritable
     # Based on the underlying predicted distribution, calculates a range within which the predicted value for the column lies with the specified probability.
     #
     # ==== Arguments
-    # +column+ -- the column for which to calculate the range
-    # +p+ -- The desired degree of probability. Default is +nil+, in which case will default to 0.5 for boolean and categorical columns, and to 0.9 for count and real columns.
+    # * +column+ -- the column for which to calculate the range
+    # * +p+ -- The desired degree of probability. Default is +nil+, in which case will default to 0.5 for boolean and categorical columns, and to 0.9 for count and real columns.
     # 
     # ==== Returns
-    # For boolean and categorical columns, a Hash whose keys are categorical values in the calculated range and whose values are probabilities; for real and count columns, an Array of the +[min, max]+ values for the calculated range.
+    # For boolean and categorical columns, a Hash whose keys are categorical values in the calculated range and whose values are probabilities; for real and count columns, an Array of the <tt>[min, max]</tt> values for the calculated range.
     #
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def credible_values(column, p=nil)
