@@ -308,7 +308,7 @@ module Veritable
     #
     # ==== Arguments
     # * +schema+ -- a schema describing the analysis to perform. Must be a Veritable::Schema object or a Hash of the form:
-    #     <tt>{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}</tt>
+    #     {'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}
     # where the specified datatype for each column is one of <tt>['real', 'boolean', 'categorical', 'count']</tt> and is valid for the column.
     # * +analysis_id -- the unique String id of the new analysis. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of an +analysis_id+. Default is +nil+, in which case a new id will be automatically generated.
     # * +description+ -- a String describing the analysis. Default is <tt>''</tt>.
@@ -612,7 +612,7 @@ module Veritable
     #
     # ==== Arguments
     # * +data+ -- the data for the schema as a Hash with the form:
-    #     <tt>{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}</tt>
+    #     {'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}
     # where the datatype must be one of <tt>["real", "categorical", "count", "boolean"]</tt>
     # * +subset+ -- a Hash or Array whose keys will be used to limit the columns present in the Schema created from the input +data+
     #
