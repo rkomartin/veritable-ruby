@@ -5,23 +5,82 @@ require 'veritable/resource'
 require 'veritable/util'
 
 module Veritable
+
+  # Represents the API resources available to a user of the Veritable API
+  #
+  # Users should not initialize directly; use Veritable.connect as the entry point.
+  #
+  # ==== Methods
+  # * +root+ -- gets the root of the API
+  # * +limits+ -- gets the user-specific API limits
+  # * +tables+ -- gets a Veritable::Cursor over the collection of available tables
+  # * +table+ -- gets an individual data table by its unique id
+  # * +create_table+ -- creates a new data table
+  # * +delete_table+ -- deletes a new data table by its unique id
+  # * +has_table?+ -- checks whether a table with the given id is available
+  # 
+  # See also: https://dev.priorknowledge.com/docs/client/ruby  
   class API
     include VeritableResource
 
+    # Gets the root of the api
+    #
+    # ==== Returns
+    # A Hash with the keys +"status"+ (should be equal to +"SUCCESS"+) and +"entropy"+ (a random Float).
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def root; get(""); end
 
+    # Gets the user-specific API limits
+    #
+    # ==== Returns
+    # A Hash with the keys +"max_categories"+, +"max_row_batch_count"+, +"max_string_length"+, +"predictions_max_cols"+, +"predictions_max_count"+, +"schema_max_cols"+, +"table_max_cols_per_row"+, +"table_max_rows"+, and +"table_max_running_analyses"+, representing the user's current API limits.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def limits; get("user/limits"); end
 
+    # Gets a cursor for the table collection
+    #
+    # ==== Arguments
+    # * +opts+ A Hash optionally containing the keys
+    #   - +"start"+ -- the table id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first table id.
+    #   - +"limit"+ -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #
+    # ==== Returns
+    # A Veritable::Cursor. The cursor will return Veritable::Table objects representing the available data tables, in lexicographic order of their unique ids.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def tables(opts={'start' => nil, 'limit' => nil})
       Cursor.new({'collection' => "tables",
         'start' => opts['start'],
         'limit' => opts['limit']}.update(@opts)) {|x| Table.new(@opts, x)}
     end
 
-    def table(table_id)
-      Table.new(@opts, get("tables/#{table_id}"))
-    end
+    # Gets an individual table by its unique id
+    #
+    # ==== Arguments
+    # * +table_id+ -- the unique id of the table
+    #
+    # ==== Returns
+    # A Veritable::Table
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def table(table_id); Table.new(@opts, get("tables/#{table_id}")); end
 
+    # Creates a new table
+    #
+    # ==== Arguments
+    # +table_id+ -- the unique String id of the new table. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of a +table_id+. Default is +nil+, in which case a new id will be automatically generated.
+    # +description+ -- a String describing the table. Default is +''+.
+    # +force+ -- if true, will overwrite any existing table with the same id. Default is +false+.
+    #
+    # ==== Raises
+    # A Veritable::VeritableError if +force+ is not true and there is an existing table with the same id.
+    #
+    # ==== Returns
+    # A Veritable::Table
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def create_table(table_id=nil, description='', force=false)
       if table_id.nil?
         autogen = true
@@ -45,11 +104,26 @@ module Veritable
       Table.new(@opts, doc)
     end
 
-    def delete_table(table_id); delete("tables/#{table_id}"); end
+    # Deletes an existing table
+    #
+    # ==== Arguments
+    # +table_id+ --- the unique id of the table to delete
+    #
+    # ==== Returns
+    # +nil+ on success. Succeeds silently if no table with the specified id is found.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def delete_table(table_id); delete("tables/#{table_id}"); nil; end
 
-    def inspect; to_s; end
-    def to_s; "#<Veritable::API url='#{api_base_url}'>"; end
-
+    # Checks if a table with the given unique id exists
+    #
+    # ==== Arguments
+    # +table_id+ --- the unique id of the table to check
+    #
+    # ==== Returns
+    # +true+ or +false+, as appropriate.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def has_table?(table_id)
       begin
         table table_id
@@ -59,37 +133,128 @@ module Veritable
         true
       end
     end
+
+    # Returns a string representation of the API resource
+    def inspect; to_s; end
+
+    # Returns a string representation of the API resource
+    def to_s; "#<Veritable::API url='#{api_base_url}'>"; end
+
   end
 
+  # Represents the resources associated with a single table
+  #
+  # ==== Attributes
+  # * +_id+ -- the unique String id of the table
+  # * +description+ -- the String description of the table
+  #
+  # ==== Methods
+  # * +delete+ -- deletes the associated table resource
+  # * +row+ -- gets a row of the table by its unique id
+  # * +rows+ -- gets a Veritable::Cursor over the collection of rows in the table
+  # * +upload_row+ -- uploads a new row to the table
+  # * +batch_upload_rows+ -- batch uploads multiple rows to the table
+  # * +delete_row+ -- deletes a row from the table by its unique id
+  # * +batch_delete_rows+ -- batch deletes multiple rows from the table
+  # * +analyses+ -- batch deletes multiple rows from the table
+  # * +analysis+ -- batch deletes multiple rows from the table
+  # * +create_analysis+ -- batch deletes multiple rows from the table
+  # * +delete_analysis+ -- batch deletes multiple rows from the table
+  # * +has_analysis?+ -- batch deletes multiple rows from the table
+  # 
+  # See also: https://dev.priorknowledge.com/docs/client/ruby  
   class Table
     include VeritableResource
 
     alias :rest_delete :delete
-    def delete
-      rest_delete(link('self'))
-    end
 
+    # Deletes the table
+    #
+    # ==== Returns
+    # +nil+ on success. Succeeds silently if the resource has already been deleted.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def delete; rest_delete(link('self')); end
+
+    # Gets a row by its unique id
+    #
+    # ==== Arguments
+    # +row_id+ --- the unique id of the row to retrieve
+    #
+    # ==== Returns
+    # A Hash representing the row, whose keys are column ids as Strings and whose values are data cells.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def row(row_id); get("#{link('rows')}/#{row_id}"); end
 
+    # Gets a cursor for the row collection
+    #
+    # ==== Arguments
+    # * +opts+ A Hash optionally containing the keys
+    #   - +"start"+ -- the row id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first table id.
+    #   - +"limit"+ -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #
+    # ==== Returns
+    # A Veritable::Cursor. The cursor will return Hashes representing the rows, in lexicographic order of their unique ids.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def rows(opts={'start' => nil, 'limit' => nil})
       Cursor.new({'collection' => link('rows'),
         'start' => opts['start'],
         'limit' => opts['limit']}.update(@opts))
     end
 
+    # Uploads a new row to the table
+    #
+    # ==== Arguments
+    # * +row+ -- a Hash repreenting the data in the row, whose keys are column ids as Strings. Must contain the key +"_id"+, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
+    #
+    # ==== Raises
+    # A Veritable::VeritableError if the row Hash is missing the +"_id"+ field or is improperly formed.
+    #
+    # ==== Returns
+    # +nil+ on success.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def upload_row(row)
       Util.check_row row
       put("#{link('rows')}/#{row['_id']}", row)
+      nil
     end
 
-    def batch_upload_rows(rows, per_page=100)
-      batch_modify_rows('put', rows, per_page)
-    end
+    # Batch uploads multiple rows to the table
+    #
+    # ==== Arguments
+    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key +"_id"+, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
+    # * +per_page+ -- optionally controls the number of rows to upload in each batch. Defaults to +100+.
+    #
+    # ==== Returns
+    # +nil+ on success.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def batch_upload_rows(rows, per_page=100); batch_modify_rows('put', rows, per_page); end
 
-    def delete_row(row_id)
-      rest_delete("#{link('rows')}/#{row_id}")
-    end
+    # Deletes a row from the table
+    #
+    # ==== Arguments
+    # * +row_id+ -- the unique String id of the row to delete
+    #
+    # ==== Returns
+    # +nil+ on success. Succeeds silently if the row does not exist in the table.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def delete_row(row_id); rest_delete("#{link('rows')}/#{row_id}"); nil; end
 
+    # Batch deletes a list of rows from the table
+    #
+    # ==== Arguments
+    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key +"_id"+, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
+    # * +per_page+ -- optionally controls the number of rows to delete in each batch. Defaults to +100+.
+    #
+    # ==== Returns
+    # +nil+ on success.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def batch_delete_rows(rows, per_page=100)
       begin
         batch_modify_rows('delete', rows, per_page)
@@ -100,20 +265,63 @@ module Veritable
       end
     end
 
-    def analysis(analysis_id)
-      Analysis.new(@opts, get("#{link('analyses')}/#{analysis_id}"))
-    end
+    # Gets an analysis by its unique id
+    #
+    # ==== Arguments
+    # * +analysis_id+ -- the unique id of the analysis to retrieve
+    #
+    # ==== Returns
+    # A new Veritable::Analysis
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def analysis(analysis_id); Analysis.new(@opts, get("#{link('analyses')}/#{analysis_id}")); end
 
+    # Gets a cursor for the analysis collection
+    #
+    # ==== Arguments
+    # * +opts+ A Hash optionally containing the keys
+    #   - +"start"+ -- the analysis id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first analysis id.
+    #   - +"limit"+ -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #
+    # ==== Returns
+    # A Veritable::Cursor. The cursor will return Veritable::Analysis objects, in lexicographic order of their unique ids.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def analyses(opts={'start' => nil, 'limit' => nil})
       Cursor.new({'collection' => link('analyses'),
         'start' => opts['start'],
         'limit' => opts['limit']}.update(@opts)) {|x| Analysis.new(@opts, x)}
     end
 
-    def delete_analysis(analysis_id)
-      rest_delete("#{link('analyses')}/#{analysis_id}")
-    end
+    # Deletes an analysis by its unique id
+    #
+    # ==== Arguments
+    # * +analysis_id+ -- the unique String id of the analysis to delete
+    #
+    # ==== Returns
+    # +nil+ on success. Succeeds silently if the analysis does not exist.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def delete_analysis(analysis_id); rest_delete("#{link('analyses')}/#{analysis_id}"); nil; end
 
+    # Creates a new analysis
+    #
+    # ==== Arguments
+    # +schema+ -- a schema describing the analysis to perform. Must be a Veritable::Schema object or a Hash of the form:
+    #     +{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}+
+    # where the specified datatype for each column is one of +['real', 'boolean', 'categorical', 'count']+ and is valid for the column.
+    # +analysis_id -- the unique String id of the new analysis. Must contain only alphanumeric characters, underscores, and dashes. Note that underscores and dashes are not permitted as the first character of an +analysis_id+. Default is +nil+, in which case a new id will be automatically generated.
+    # +description+ -- a String describing the analysis. Default is +''+.
+    # +force+ -- if true, will overwrite any existing analysis with the same id. Default is +false+.
+    # +analysis_type+ -- defaults to, and must be equal to, +"veritable"+
+    #
+    # ==== Raises
+    # A Veritable::VeritableError if +force+ is not true and there is an existing table with the same id.
+    #
+    # ==== Returns
+    # A Veritable::Table
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def create_analysis(schema, analysis_id=nil, description="", force=false, analysis_type="veritable")
       if analysis_type != "veritable"
         if analysis_type.respond_to? :to_s
@@ -145,12 +353,15 @@ module Veritable
       Analysis.new(@opts, doc)
     end
 
-    def inspect; to_s; end
-    def to_s; "#<Veritable::Table _id='#{_id}'>"; end
-
-    def _id; @doc['_id']; end
-    def description; @doc['description']; end
-
+    # Checks if an analysis with the given unique id exists
+    #
+    # ==== Arguments
+    # +analysis_id+ --- the unique id of the table to check
+    #
+    # ==== Returns
+    # +true+ or +false+, as appropriate.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def has_analysis?(analysis_id)
       begin
         analysis analysis_id
@@ -161,8 +372,23 @@ module Veritable
       end
     end
 
+    # Returns a string representation of the table resource
+    def inspect; to_s; end
+
+    # Returns a string representation of the table resource
+    def to_s; "#<Veritable::Table _id='#{_id}'>"; end
+
+    # The String unique id of the table resources
+    def _id; @doc['_id']; end
+
+    # The String description of the table resource
+    def description; @doc['description']; end
+
     private
 
+    # Abstracts the logic for batch deleting and batch retrieving rows
+    #
+    # Private method -- do not call directly. Instead, call batch_upload_rows or batch_delete_rows as appropriate.
     def batch_modify_rows(action, rows, per_page=100)
       if not per_page.is_a? Fixnum or not per_page > 0
         raise VeritableError.new("Batch upload or delete must have integer page size greater than 0.")
@@ -192,16 +418,69 @@ module Veritable
     end
   end
 
+  # Represents the resources associated with a single analysis
+  #
+  # ==== Attributes
+  # * +_id+ -- the unique String id of the analysis
+  # * +description+ -- the String description of the analysis
+  # * +created_at+ -- a String timestamp recording the time the analysis was created
+  # * +finished_at+ -- a String timestamp recording the time the analysis completd
+  # * +state+ -- the state of the analysis, one of +"running"+, +"succeeded"+, and +"failed"+
+  # * +running?+ -- +true+ if +state+ is +"running"+
+  # * +succeeded?+ -- ++true+ if +state+ is +"succeeded"+
+  # * +failed?+ -- +true+ if +state+ is +"failed"+
+  # * +error+ -- a Hash containing details of the error that occurred, if +state+ is +"failed"+, otherwise +nil+
+  # * +progress+ -- a Hash containing details of the analysis progress, if +state+ is +"running"+, otherwise +nil+ 
+  # * +schema+ -- a Veritable::Schema describing the columns included in the analysis
+  #
+  # ==== Methods
+  # * +update+ -- refreshes the local representation of the API resource
+  # * +delete+ -- deletes the associated API resource
+  # * +wait+ -- blocks until the analysis succeeds or fails
+  # * +predict+ -- makes new predictions based on the analysis
+  # * +related_to+ -- calculates column relatedness based on the analysis
+  # 
+  # See also: https://dev.priorknowledge.com/docs/client/ruby  
   class Analysis
     include VeritableResource
 
-    def update; @doc = get(link('self')); end
+    # Refreshes the local representation of the analysis
+    #
+    # ==== Returns
+    # +nil+ on success
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def update; @doc = get(link('self')); nil; end
 
+    # Alias the connection's delete method as rest_delete
     alias :rest_delete :delete
+
+    # Deletes the associated analysis resource
+    #
+    # ==== Returns
+    # +nil+ on success. Succeeds silently if the analysis has already been deleted.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def delete; rest_delete(link('self')); end
 
+    # The schema describing the analysis
+    #
+    # ==== Returns
+    # A new Veritable::Schema object describing the colums contained in the analysis.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def schema; Schema.new(get(link('schema'))); end
 
+    # Blocks until the analysis succeeds or fails
+    #
+    # ==== Arguments
+    # * +max_time+ -- the maximum time to wait, in seconds. Default is +nil+, in which case the method will wait indefinitely.
+    # * +poll+ -- the number of seconds to wait between polling the API server. Default is +2+.
+    #
+    # ==== Returns
+    # +nil+ on success.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def wait(max_time=nil, poll=2)
       elapsed = 0
       while running?
@@ -216,6 +495,16 @@ module Veritable
       end
     end
 
+    # Makes predictions based on the analysis
+    #
+    # ==== Arguments
+    # * +row+ -- a Hash representing the row whose missing values are to be predicted. Keys must be valid String ids of columns contained in the underlying table, and values must be either fixed (conditioning) values of an appropriate type for each column, or +nil+ for values to be predicted.
+    # * +count+ -- optionally specify the number of samples from the predictive distribution to return. Defaults to +100+.
+    #
+    # ==== Returns
+    # A Veritable::Prediction object
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def predict(row, count=100)
       update if running?
       if succeeded?
@@ -242,6 +531,17 @@ module Veritable
       end
     end
 
+    # Scores how related columns are to a column of interest
+    #
+    # ==== Arguments
+    # * +column_id+ -- the id of the column of interest
+    # * +start+ -- the column id from which to start the cursor. Columns with related scores greater than or equal to the score of column +start+ will be returned by the cursor. Default is +nil+, in which case all columns in the table will be returned by the cursor.
+    # * +limit+ -- optionally limits the number of columns returned by the cursor. Default is +nil+, in which case the number of columns returned will not be limited.
+    #
+    # ==== Returns
+    # A Veritable::Cursor. The cursor will return column ids, in order of their relatedness to the column of interest.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def related_to(column_id, opts={'start' => nil, 'limit' => nil})
       update if running?
       if succeeded?
@@ -258,21 +558,68 @@ module Veritable
       end
     end
 
+    # Returns a string representation of the analysis resource
     def inspect; to_s; end
+
+    # Returns a string representation of the analysis resource
     def to_s; "#<Veritable::Analysis _id='#{_id}'>"; end
 
+    # The unique String id of the analysis
     def _id; @doc['_id']; end
+
+    # String timestamp recording the time the analysis was created
     def created_at; @doc['created_at']; end
+
+    # String timestamp recording the time the analysis completed
     def finished_at; @doc['finished_at']; end
+
+    # The state of the analysis
+    #
+    # One of +"running"+, +"succeeded"+, or +"failed"+.
     def state; @doc['state']; end
+
+    # +true+ if +state+ is +"running"+, otherwise +false+
     def running?; state == 'running'; end
+
+    # +true+ if +state+ is +"succeeded"+, otherwise +false+
     def succeeded?; state == 'succeeded'; end
+
+    # +true+ if +state+ is +"failed"+, otherwise +false+
     def failed?; state == 'failed'; end
+
+    # A Hash containing details of the error if +state+ is +"failed"+, otherwise +nil+
     def error; state == 'failed' ? @doc['error'] : nil; end
+
+    # A Hash containing details of the analysis progress if +state+ is +"running"+, otherwise +nil+
     def progress; state == 'running' ? @doc['progress'] : nil; end
+
+    # The String description of the analysis
+    def description; @doc['description']; end
   end
 
+  # Represents a schema for a Veritable analysis
+  #
+  # A Veritable::Schema is a Hash with some additional convenience methods. Schema objects can be used interchangeably with Hashes of the same structure throughout veritable-ruby.
+  #
+  # ==== Methods
+  # +type+ -- gets the datatype for a given column
+  # +validate+ -- checks that the schema is well-formed
+  # 
+  # See also: https://dev.priorknowledge.com/docs/client/ruby  
   class Schema < Hash
+
+    # Initalizes a new Schema from a Hash
+    #
+    # ==== Arguments
+    # * +data+ -- the data for the schema as a Hash with the form:
+    #     +{'col_1': {type: 'datatype'}, 'col_2': {type: 'datatype'}, ...}+
+    # where the datatype must be one of +"real"+, +"categorical"+, +"count"+, or +"boolean"+.
+    # * +subset+ -- a Hash or Array whose keys will be used to limit the columns present in the Schema created from the input +data+
+    #
+    # ==== Returns
+    # A new Veritable::Schema
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def initialize(data, subset=nil)
       begin
         data.each {|k, v|
@@ -295,10 +642,25 @@ module Veritable
       end
     end
 
-    def type(column)
-      self[column]['type']
-    end
+    # Convenience accessor for the type of a Schema column
+    #
+    # Running +schema.type(column)+ is equivalent to +schema[column]['type']+
+    #
+    # ==== Arguments
+    # +column+ -- the id of the column whose type we are retrieving
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def type(column); self[column]['type']; end
 
+    # Validates the schema, checking that it is well-formed
+    #
+    # ==== Raises
+    # A Veritable::VeritableError if any column ids or types are invalid.
+    #
+    # ==== Returns
+    # +nil+ on success
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def validate
       self.each {|k, v|
         if not k.is_a? String
@@ -322,15 +684,60 @@ module Veritable
           raise VeritableError.new("Validate schema -- Invalid schema specification. Column #{k}, type #{v['type']} is not valid. Type must be one of #{DATATYPES}")
         end
       }
+      nil
     end
   end
 
+# Represents the result of a Veritable prediction
+#
+# A Veritable::Prediction is a Hash whose keys are the columns in the prediction request, and whose values are standard point estimates for predicted columns. For fixed (conditioning) columns, the value is the fixed value. For predicted values, the point estimate varies by datatype:
+# * real -- mean
+# * count -- mean rounded to the nearest integer
+# * categorical -- mode
+# * boolean -- mode
+# The object also gives access to the original predictions request, the predicted distribution on missing values, the schema of the analysis used to make predictions, and standard measures of uncertainty for the predicted values.
+#
+# ==== Attributes
+# * +request+ -- a Hash containing the original predictions request. Keys are column names; conditioning values are present, predicted values are +nil+.
+# * +distribution+ -- the underlying predicted distribution as an Array of Hashes, each of which represents a single sample from the predictive distribution.
+# * +schema+ -- the schema for the columns in the predictions request
+# * +uncertainty+ -- a Hash containing measures of uncertainty for each predicted value.
+#
+# ==== Methods
+# * +prob_within+ -- calculates the probability a column's value lies within a range
+# * +credible_values+ -- calculates a credible range for the value of a column
+# 
+# See also: https://dev.priorknowledge.com/docs/client/ruby  
   class Prediction < Hash
+    # The original predictions request, as a Hash
     attr_reader :request
+
+    # The underlying predicted distribution, as an Array of Hashes
+    #
+    # Each Hash represents a single draw from the predictive distribution, and should be regarded as equiprobable with the others.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     attr_reader :distribution
+
+    # The schema for the columns in the predictions request
     attr_reader :schema
+
+    # A Hash of standard uncertainty measures
+    #
+    # Keys are the columns in the prediction request and values are uncertainty measures associated with each point estimate. A higher value indicates greater uncertainty. These measures vary by datatype:
+    # * real -- length of 90% credible interval
+    # * count -- length of 90% credible interval
+    # * categorical -- total probability of all non-modal values
+    # * boolean -- probability of the non-modal value
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     attr_reader :uncertainty
 
+    # Initializes a Veritable::Prediction
+    #
+    # Users should not call directly. Instead, call the predict method of Veritable::Analysis.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def initialize(request, distribution, schema)
       @request = request
       @distribution = distribution
@@ -348,6 +755,18 @@ module Veritable
       }
     end
     
+    # Calculates the probability a column's value lies within a range.
+    #
+    # Based on the underlying predicted distribution, calculates the marginal probability that the predicted value for the given columns lies within the specified range.
+    #
+    # ==== Arguments
+    # column -- the column for which to calculate probabilities
+    # range -- a representation of the range for which to calculate probabilities. For real and count columns, this is an Array of +[start, end]+ representing a closed interval. For boolean and categorical columns, this is an Array of discrete values.
+    #
+    # ==== Returns
+    # A probability as a Float
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/python
     def prob_within(column, range)
       col_type = schema.type column
       Veritable::Util.check_datatype(col_type, "Probability within -- ")
@@ -375,6 +794,18 @@ module Veritable
       end
     end
 
+    # Calculates a credible range for the value of a column.
+
+    # Based on the underlying predicted distribution, calculates a range within which the predicted value for the column lies with the specified probability.
+    #
+    # ==== Arguments
+    # +column+ -- the column for which to calculate the range
+    # +p+ -- The desired degree of probability. Default is +nil+, in which case will default to 0.5 for boolean and categorical columns, and to 0.9 for count and real columns.
+    # 
+    # ==== Returns
+    # For boolean and categorical columns, a Hash whose keys are categorical values in the calculated range and whose values are probabilities; for real and count columns, an Array of the +[min, max]+ values for the calculated range.
+    #
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def credible_values(column, p=nil)
       col_type = schema.type column
       Veritable::Util.check_datatype(col_type, "Credible values -- ")
@@ -395,16 +826,21 @@ module Veritable
       end
     end
 
+    # Returns a string representation of the prediction results
     def inspect; to_s; end
+
+    # Returns a string representation of the prediction results
     def to_s; "<Veritable::Prediction #{super}>"; end
 
     private
 
+    # Private method: sorts the values for a column
     def sorted_values(column)
       values = (distribution.collect {|row| row[column]}).reject {|x| x.nil?}
       values.sort
     end
 
+    # Private method: calculates counts for a column
     def counts(column)
       cts = Hash.new
       distribution.each {|row|
@@ -419,6 +855,7 @@ module Veritable
       cts
     end
 
+    # Private method: calculates frequencies for a column
     def freqs(cts)
       total = cts.values.inject(0) {|memo, obj| memo + obj}
       freqs = Hash.new()
@@ -428,6 +865,7 @@ module Veritable
       freqs
     end
 
+    # Private method: calculates point estimates for a column
     def point_estimate(column)
       col_type = schema.type column
       Veritable::Util.check_datatype(col_type, "Point estimate -- ")
@@ -442,6 +880,7 @@ module Veritable
       end
     end
 
+    # Private method: calculates uncertainties for a column
     def calculate_uncertainty(column)
       values = distribution.collect {|row| row[column]}
       col_type = schema.type column
