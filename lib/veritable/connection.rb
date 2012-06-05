@@ -2,14 +2,21 @@ require 'veritable/object'
 require 'multi_json'
 
 module Veritable
+
+  # Encapsulates the HTTP logic for connecting to the Veritable API
+  #
+  # Users should not include this module.
   module Connection
     include VeritableObject
+
+    # Initalizes a new connection
     def initialize(opts=nil, doc=nil)
       super(opts, doc)
       require_opts :api_key, :api_base_url
       default_opts(:ssl_verify => true, :enable_gzip => true)
     end
 
+    # Wraps the HTTP GET logic
     def get(url, params=nil, headers={})
       if params and params.count > 0
         query_string = Util.query_params(params)
@@ -18,18 +25,23 @@ module Veritable
       request(:get, url, nil, headers)
     end
 
+    # Wraps the HTTP POST logic
     def post(url, payload, headers={})
       payload = MultiJson.encode(payload)
       headers = headers.merge({:content_type => 'application/json'})
       request(:post, url, payload, headers)
     end
 
+    # Wraps the HTTP PUT logic
     def put(url, payload, headers={})
       payload = MultiJson.encode(payload)
       headers = headers.merge({:content_type => 'application/json'})
       request(:put, url, payload, headers)
     end
 
+    # Wraps the HTTP DELETE logic
+    #
+    # Silently allows DELETE of nonexistent resources
     def delete(url, headers={})
       begin
         request(:delete, url, nil, headers)
@@ -40,6 +52,7 @@ module Veritable
       end
     end
 
+    # Wraps the core HTTP request logic
     def request(verb, url, payload=nil, headers={})
       url = api_base_url + "/" + url
 
@@ -75,9 +88,16 @@ module Veritable
 
     private
 
+    # Private accessor for API key
     def api_key; @opts[:api_key]; end
+
+    # Private accessor for API base URL
     def api_base_url; @opts[:api_base_url]; end
+
+    # Private accessor for API :ssl_verify option
     def ssl_verify; @opts[:ssl_verify]; end
+
+    # Private accessor for API :enable_gzip option
     def enable_gzip; @opts[:enable_gzip]; end
 
   end
