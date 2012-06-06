@@ -73,7 +73,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
   def test_delete_row
     @t.delete_row('fivebug')
     @t.delete_row('fivebug')
-    assert_raise(VeritableError) { @t.row('fivebug') }
+    assert_raise(Veritable::VeritableError) { @t.row('fivebug') }
   end
 
   def test_batch_delete_rows
@@ -94,7 +94,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
 
   def test_batch_delete_rows_faulty
     rs = [{'zim' => 'zam', 'wos' => 9.3}, {'zim' => 'zop', 'wos' => 18.9}] + @rs
-    assert_raise(VeritableError) {@t.batch_delete_rows rs}
+    assert_raise(Veritable::VeritableError) {@t.batch_delete_rows rs}
   end
 
   def test_get_analyses
@@ -118,7 +118,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
 
   def test_multiple_running_analyses_fail
     @t.create_analysis(@schema)
-    assert_raise(VeritableError) { @t.create_analysis(@schema) }
+    assert_raise(Veritable::VeritableError) { @t.create_analysis(@schema) }
   end
 
   def test_create_analysis_id_json_roundtrip
@@ -129,14 +129,14 @@ class VeritableTableOpTest < Test::Unit::TestCase
 
   def test_create_analysis_invalid_id
     INVALIDS.each {|tid|
-      assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id=tid)}
+      assert_raise(Veritable::VeritableError) {@t.create_analysis(@schema, analysis_id=tid)}
     }
   end
 
   def test_create_duplicate_analysis
     a = @t.create_analysis(@schema, analysis_id="foo")
     a.wait
-    assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id="foo")}
+    assert_raise(Veritable::VeritableError) {@t.create_analysis(@schema, analysis_id="foo")}
     @t.create_analysis(@schema, analysis_id="foo", description = "", force=true)
   end
 
@@ -144,13 +144,13 @@ class VeritableTableOpTest < Test::Unit::TestCase
     [{'zim' => {'type' => 'generalized_wishart_process'}, 'wos' => {'type' => 'ibp'}},
      'wimmel', {}, ['categorical', 'real'], true, false, 3, 3.143,
      {'zim' => {'type' => 'categorical'}, 'wos' => {'type' => 'real'}, 'krob' => {'type' => 'count'}}
-    ].each {|s| assert_raise(VeritableError) {
+    ].each {|s| assert_raise(Veritable::VeritableError) {
       s = Veritable::Schema.new(s)
       @t.create_analysis(s) } }
   end
 
   def test_create_analysis_unpossible_type
-    assert_raise(VeritableError) {@t.create_analysis(@schema, analysis_id="failing", description="should fail", force=true, analysis_type="svm")}
+    assert_raise(Veritable::VeritableError) {@t.create_analysis(@schema, analysis_id="failing", description="should fail", force=true, analysis_type="svm")}
   end
 
   def test_wait_for_analysis
@@ -188,7 +188,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
   end
 
   def get_missing_analysis_fails
-    assert_raise(VeritableError) {@t2.analysis 'yummy_tummy'}
+    assert_raise(Veritable::VeritableError) {@t2.analysis 'yummy_tummy'}
   end
 
   def test_delete_analysis

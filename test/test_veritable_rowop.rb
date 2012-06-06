@@ -28,13 +28,13 @@ class VeritableRowOpTest < Test::Unit::TestCase
 
   def test_upload_row_invalid_id
     INVALIDS.each {|id|
-      assert_raise(VeritableError, "ID #{id} passed") {
+      assert_raise(Veritable::VeritableError, "ID #{id} passed") {
         @t.upload_row({'_id' => id, 'zim' => 'zam', 'wos' => 19.2})}
     }
   end
 
   def test_upload_row_autogen_id
-    assert_raise(VeritableError) { @t.upload_row({'zim' => 'zom', 'wos' => 21.1})}
+    assert_raise(Veritable::VeritableError) { @t.upload_row({'zim' => 'zom', 'wos' => 21.1})}
   end
 
   def test_upload_duplicate_rows
@@ -55,11 +55,11 @@ class VeritableRowOpTest < Test::Unit::TestCase
     rows = INVALIDS.inject([]) {|memo, id|
       memo << {'_id' => id, 'zim' => 'zop', 'wos' => 10.3}
     }
-    assert_raise(VeritableError) {@t.batch_upload_rows rows}
+    assert_raise(Veritable::VeritableError) {@t.batch_upload_rows rows}
   end
 
   def test_batch_upload_rows_missing_ids
-    assert_raise(VeritableError) {
+    assert_raise(Veritable::VeritableError) {
       @t.batch_upload_rows [{'zim' => 'zop', 'wos' => 10.3}, {'zim' => 'zam', 'wos' => 9.3},
              {'zim' => 'zop', 'wos' => 18.9},
              {'_id' => 'sixbug', 'zim' => 'fop', 'wos' => 18.3}]
@@ -85,7 +85,7 @@ class VeritableRowOpTest < Test::Unit::TestCase
         {'_id' => "r" + i.to_s, 'zim' => 'zop', 'wos' => rand, 'fop' => rand(1000)}
     }
     [0, -5, 2.31, "foo", false].each {|pp|
-      assert_raise(VeritableError, "Failed on #{pp}") {@t.batch_upload_rows(rs, pp)}
+      assert_raise(Veritable::VeritableError, "Failed on #{pp}") {@t.batch_upload_rows(rs, pp)}
     }
   end
 end
