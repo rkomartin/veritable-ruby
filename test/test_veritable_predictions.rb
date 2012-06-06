@@ -62,14 +62,14 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     pr = @a2.predict Hash.new
     pr = @a2.predict ({'real' => 1, 'bool' => nil})
 
-    assert_raise(VeritableError) {@a2.predict [
+    assert_raise(Veritable::VeritableError) {@a2.predict [
       {'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
       {'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}
     ]}
 
-    assert_raise(VeritableError) {@a2.predict(r, count=10000)}
+    assert_raise(Veritable::VeritableError) {@a2.predict(r, count=10000)}
 
-    assert_raise(VeritableError) {@a1.predict r}
+    assert_raise(Veritable::VeritableError) {@a1.predict r}
 
     @a2.delete
   end
@@ -151,7 +151,7 @@ class TestVeritableRelated < Test::Unit::TestCase
     @schema.keys.each {|col|
       assert @a.related_to(col).to_a.size <= 5
     }
-    assert_raise(VeritableError) {@a.related_to('missing_col')}
+    assert_raise(Veritable::VeritableError) {@a.related_to('missing_col')}
     assert @a.related_to('cat', {'start' => 'real'}).to_a.size <= 5
     assert @a.related_to('cat', {'limit' => 0}).to_a.size == 0
     assert @a.related_to('cat', {'limit' => 3}).to_a.size <= 3

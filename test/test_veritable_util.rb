@@ -137,45 +137,45 @@ class VeritableTestUtils < Test::Unit::TestCase
                  'IntB' => {'type' => 'count'}}
     schemaRule = [[/Int.*/, {'type' => 'count'}],
                   [/Cat.*/, {'type' => 'categorical'}]]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		schema = Veritable::Util.make_schema(schemaRule, {})
 	end
   end
 
   def test_missing_schema_type_fail
     bschema = {'ColInt' => {}, 'ColFloat' => {'type' => 'real'}}
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data([], bschema)
 	end
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.clean_data([], bschema)
 	end
   end
 
   def test_bad_schema_type_fail
     bschema = {'ColInt' => {'type' => 'jello'}, 'ColFloat' => {'type' => 'real'}}
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data([], bschema)
 	end
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.clean_data([], bschema)
 	end
   end
   
   def test_invalid_schema_underscore
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data([], {'_foo' => {'type' => 'count'}})
 	end
   end
 
   def test_invalid_schema_dot
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data([], {'b.d' => {'type' => 'count'}})
 	end
   end
 
   def test_invalid_schema_dollar
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data([], {'b$d' => {'type' => 'count'}})
 	end
   end
@@ -215,12 +215,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	end
   end
@@ -238,12 +238,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '1', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == '_id'
 	end
@@ -253,12 +253,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => 2, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == '_id'
 	end
@@ -282,7 +282,7 @@ class VeritableTestUtils < Test::Unit::TestCase
 		testrows = [
 			{'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
 			{'_id' => _id, 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-		assert_raise VeritableError do
+		assert_raise Veritable::VeritableError do
 			Veritable::Util.validate_data(testrows, @vschema)
 		end
 	end
@@ -299,12 +299,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => nil, 'ColCat' => 'a', 'ColBool' => true},
         {'ColEx' => nil, 'ColInt' => 4, 'ColFloat' => nil, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColEx'
 	end
@@ -314,12 +314,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => nil, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => nil, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == '_id'
 	end
@@ -349,12 +349,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => nil, 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColCat'
 	end
@@ -373,12 +373,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => '4', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -388,12 +388,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => '4', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -421,12 +421,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 'jello', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -436,12 +436,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 'jello', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -451,12 +451,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 'jello', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -466,12 +466,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 'jello', 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -499,12 +499,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => -4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -514,12 +514,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => -4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -529,12 +529,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => -4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -544,12 +544,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => -4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColInt'
 	end
@@ -577,12 +577,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => '4.1', 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColFloat'
 	end
@@ -592,12 +592,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 4, 'ColFloat' => '4.1', 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColFloat'
 	end
@@ -625,12 +625,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 'jello', 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColFloat'
 	end
@@ -640,12 +640,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 4, 'ColFloat' => 'jello', 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColFloat'
 	end
@@ -655,12 +655,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 'jello', 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColFloat'
 	end
@@ -670,12 +670,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 'jello', 'ColCat' => 'b', 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColFloat'
 	end
@@ -703,12 +703,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 3, 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColCat'
 	end
@@ -718,12 +718,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 3, 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColCat'
 	end
@@ -751,12 +751,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'false'}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColBool'
 	end
@@ -766,12 +766,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'false'}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColBool'
 	end
@@ -852,12 +852,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColBool'
 	end
@@ -867,12 +867,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_predictions(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_predictions(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColBool'
 	end
@@ -882,12 +882,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_data(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColBool'
 	end
@@ -897,12 +897,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => 'jello'}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
 	end
 	begin
 		Veritable::Util.clean_predictions(testrows, @vschema, { 'remove_invalids' => false })
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.row == 1
 	    assert e.col == 'ColBool'
 	end
@@ -938,12 +938,12 @@ class VeritableTestUtils < Test::Unit::TestCase
 	end
     testrows.push({'_id' => rid.to_s, 'ColCat' => (max_cols-1).to_s})
     testrows.push({'_id' => (rid + 1).to_s, 'ColCat' => (max_cols).to_s})
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.validate_data(testrows, eschema)
 	end
 	begin
 		Veritable::Util.validate_data(testrows, eschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.col == 'ColCat'
 	end
   end
@@ -960,12 +960,12 @@ class VeritableTestUtils < Test::Unit::TestCase
 	end
     testrows.push({'ColCat' => (max_cols-1).to_s})
     testrows.push({'ColCat' => (max_cols).to_s})
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
 		Veritable::Util.validate_predictions(testrows, eschema)
 	end
 	begin
 		Veritable::Util.validate_predictions(testrows, eschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.col == 'ColCat'
 	end
   end
@@ -992,12 +992,12 @@ class VeritableTestUtils < Test::Unit::TestCase
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColBool' => true},
         {'_id' => '2', 'ColInt' => 4, 'ColFloat' => 4.1, 'ColBool' => false}]
-	assert_raise VeritableError do
+	assert_raise Veritable::VeritableError do
         Veritable::Util.validate_data(testrows, @vschema)
 	end
 	begin
         Veritable::Util.validate_data(testrows, @vschema)
-	rescue VeritableError => e
+	rescue Veritable::VeritableError => e
 	    assert e.col == 'ColCat'
 	end
   end

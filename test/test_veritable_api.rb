@@ -57,7 +57,7 @@ class VeritableAPITest < Test::Unit::TestCase
 
   def test_create_table_invalid_id
     INVALIDS.each {|tid|
-      assert_raise(VeritableError, "ID #{tid} passed") { @api.create_table tid}
+      assert_raise(Veritable::VeritableError, "ID #{tid} passed") { @api.create_table tid}
     }
   end
 
@@ -85,12 +85,12 @@ class VeritableAPITest < Test::Unit::TestCase
     @api.delete_table @tid
     @api.create_table @tid
     @api.delete_table @tid
-    assert_raise(VeritableError) {@api.table @tid}
+    assert_raise(Veritable::VeritableError) {@api.table @tid}
   end
 
   def test_create_duplicate_tables
     @api.create_table @tid
-    assert_raise(VeritableError) {@api.create_table @tid}
+    assert_raise(Veritable::VeritableError) {@api.create_table @tid}
     @api.delete_table @tid
   end
 

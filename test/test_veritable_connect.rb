@@ -10,7 +10,7 @@ class VeritableConnectTest < Test::Unit::TestCase
   end
 
   def test_connect_unauthorized_fails
-    assert_raise(VeritableError) { Veritable.connect({:api_key => "foo"}) }
+    assert_raise(Veritable::VeritableError) { Veritable.connect({:api_key => "foo"}) }
   end
 
   def test_connect_nogzip
@@ -28,7 +28,7 @@ class VeritableConnectTest < Test::Unit::TestCase
   end
 
   def test_connect_not_api_fails
-    assert_raise(VeritableError) { Veritable.connect({:api_base_url => "https://graph.facebook.com/zuck"}) }
+    assert_raise(Veritable::VeritableError) { Veritable.connect({:api_base_url => "https://graph.facebook.com/zuck"}) }
   end
 
   def test_instantiate_api
