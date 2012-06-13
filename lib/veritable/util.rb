@@ -238,6 +238,7 @@ module Veritable
       #   - +reduce_categories+ -- controls whether clean_data will automatically reduce the number of categories in categorical columns with too many categories (default: +true+) If +true+, the largest categories in a column will be preserved, up to the allowable limit, and the other categories will be binned as <tt>"Other"</tt>.
       #   - +assign_ids+ -- controls whether clean_data will automatically assign new ids to the rows (default: +false=) If +true+, rows will be numbered sequentially. If the rows have an existing <tt>'_id'</tt> column, +remove_extra_fields+ must also be set to +true+ to avoid raising a Veritable::VeritableError.
       #   - +remove_extra_fields+ -- controls whether clean_data will automatically remove columns that are not contained in the schema (default: +false+) If +assign_ids+ is +true+ (default), will also remove the <tt>'_id'</tt> column.
+      #   - +rename_columns+ -- an array of two-valued arrays <tt>[[old_col_1, new_col_1],[old_col_2, new_col_2],...]</tt> of column names to rename. If +rename_columns+ is +false+ (default), no columns are renamed. 
       #
       # ==== Raises
       # A Veritable::VeritableError containing further details if the data does not validate against the schema.
@@ -253,11 +254,12 @@ module Veritable
           'remove_nones' => opts.has_key?('remove_nones') ? opts['remove_nones'] : true,
           'remove_invalids' => opts.has_key?('remove_invalids') ? opts['remove_invalids'] : true,
           'reduce_categories' => opts.has_key?('reduce_categories') ? opts['reduce_categories'] : true,
-          'has_ids' => true,
+          'has_ids' => '_id',
           'assign_ids' => opts.has_key?('assign_ids') ? opts['assign_ids'] : false,
           'allow_extra_fields' => true,
           'remove_extra_fields' => opts.has_key?('remove_extra_fields') ? opts['remove_extra_fields'] : false,
-          'allow_empty_columns' => false})
+          'allow_empty_columns' => false,
+          'rename_columns' => opts.has_key?('rename_columns') ? opts['rename_columns'] : false})
       end
 
       # Validates an Array of row Hashes against an analysis schema
@@ -280,14 +282,16 @@ module Veritable
           'remove_nones' => false,
           'remove_invalids' => false,
           'reduce_categories' => false,
-          'has_ids' => true,
+          'has_ids' => '_id',
           'assign_ids' => false,
           'allow_extra_fields' => true,
           'remove_extra_fields' => false,
-          'allow_empty_columns' => false})
+          'allow_empty_columns' => false,
+          'rename_columns' => false})
       end
 
       # Cleans up a predictions request in accordance with an analysis schema
+      # Automatically renames '_id' to '_request_id', otherwise assigns a new '_request_id' to each row
       #
       # This method mutates its +predictions+ argument. If clean_predictions raises an exception, values in some columns may be converted while others are left in their original state.
       #
@@ -313,11 +317,12 @@ module Veritable
           'remove_nones' => false,
           'remove_invalids' => opts.has_key?('remove_invalids') ? opts['remove_invalids'] : true,
           'reduce_categories' => false,
-          'has_ids' => false,
-          'assign_ids' => false,
+          'has_ids' => '_request_id',
+          'assign_ids' => true,
           'allow_extra_fields' => false,
           'remove_extra_fields' => opts.has_key?('remove_extra_fields') ? opts['remove_extra_fields'] : true,
-          'allow_empty_columns' => true})
+          'allow_empty_columns' => true,
+          'rename_columns' => [['_id','_request_id']]})
       end
 
       # Validates a predictions request against an analysis schema
@@ -340,11 +345,12 @@ module Veritable
           'remove_nones' => false,
           'remove_invalids' => false,
           'reduce_categories' => false,
-          'has_ids' => false,
+          'has_ids' => '_request_id',
           'assign_ids' => false,
           'allow_extra_fields' => false,
           'remove_extra_fields' => false,
-          'allow_empty_columns' => true})
+          'allow_empty_columns' => true,
+          'rename_columns' => false})
       end
 
       private
@@ -392,13 +398,29 @@ module Veritable
         # ensure the schema is well-formed
         schema.validate  
 
+        # figure out which column holds the unique id
+        if (opts['has_ids'] or opts['assign_ids'])
+            if (opts['has_ids'].is_a? String and opts['assign_ids'].is_a? String)
+                if (opts['has_ids'] != opts['assign_ids'])
+                    raise VeritableError.new("Can't assign new row ids to column '#{opts['assign_ids']}' when ids are expected in column '#{opts['has_ids']}'.",{})
+                end
+            end
+            if opts['assign_ids'].is_a? String
+                id_col = opts['assign_ids']
+            elsif opts['has_ids'].is_a? String
+                id_col = opts['has_ids']
+            else
+                id_col = '_id'
+            end
+        end
+        
         # store the row numbers of each unique id so that we can warn the user
         unique_ids = Hash.new
 
         # store the density of fields
         field_fill = Hash.new
         schema.keys.each {|c|
-          field_fill[c] = 0 if c != '_id'
+          field_fill[c] = 0 if c != id_col
         }
 
         # store the number of categories in each categorical column
@@ -411,49 +433,64 @@ module Veritable
         max_cats = 256
         # be careful before changing the order of any of this logic -- the point is to do this all only once
         (0...rows.size).each {|i|
+        
+          if opts['rename_columns'] # first apply the column renaming rules, if any
+            if not opts['rename_columns'].is_a? Array
+                raise VeritableError.new("Must supply column renaming rules as a list of lists.",{})
+			end
+            opts['rename_columns'].each {|rule| 
+                if not rule.is_a? Array
+					raise VeritableError.new("Must supply column renaming rules as a list of lists.",{})
+				end
+				if rows[i].include? rule[0]
+				    rows[i][rule[1]] = rows[i][rule[0]]
+					rows[i].delete rule[0]
+				end
+			}
+          end
+		  
           if opts['assign_ids']
-            rows[i]['_id'] = i.to_s  # number the rows sequentially
+            rows[i][id_col] = i.to_s  # number the rows sequentially
           elsif opts['has_ids']
-            raise VeritableError.new("Validate -- row #{i} is missing key '_id'", {'row' => i, 'col' => '_id'}) unless rows[i].include? '_id'
+            raise VeritableError.new("Validate -- row #{i} is missing key '#{id_col}'", {'row' => i, 'col' => id_col}) unless rows[i].include? id_col
             
             if opts['convert_types'] # attempt to convert _id to string
               begin
-                rows[i]['_id'] = rows[i]['_id'].to_s if not rows[i]['_id'].is_a? String
+                rows[i][id_col] = rows[i][id_col].to_s if not rows[i][id_col].is_a? String
               rescue
-                raise VeritableError.new("Validate -- row #{i}, key '_id' cannot be converted to string.", {'row' => i, 'col' => '_id'})
+                raise VeritableError.new("Validate -- row #{i}, key '#{id_col}' cannot be converted to string.", {'row' => i, 'col' => id_col})
               end
             end
 
-            if not rows[i]['_id'].is_a? String # invalid type for _id
+            if not rows[i][id_col].is_a? String # invalid type for _id
               begin
-                rows[i]['_id'].to_s
+                rows[i][id_col].to_s
               rescue
-                raise VeritableError.new("Validate -- row #{i}, key '_id' is not a string.", {'row' => i, 'col' => '_id'})
+                raise VeritableError.new("Validate -- row #{i}, key '#{id_col}' is not a string.", {'row' => i, 'col' => id_col})
               else
-                raise VeritableError.new("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is not a string.", {'row' => i, 'col' => '_id'})
+                raise VeritableError.new("Validate -- row #{i}, key '#{id_col}', value #{rows[i][id_col]} is not a string.", {'row' => i, 'col' => id_col})
               end
             end
             
             begin
-              check_id rows[i]['_id'] # make sure _id is alphanumeric
+              check_id rows[i][id_col] # make sure _id is alphanumeric
             rescue
-              raise VeritableError.new("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} contains disallowed characters. Ids must contain only alphanumerics, with underscores and hyphens allowed after the beginning of the id.", {'row' => i, 'col' => '_id'})
+              raise VeritableError.new("Validate -- row #{i}, key '#{id_col}', value #{rows[i][id_col]} contains disallowed characters. Ids must contain only alphanumerics, with underscores and hyphens allowed after the beginning of the id.", {'row' => i, 'col' => id_col})
             end
             
-            if unique_ids.include? rows[i]['_id']
-              raise VeritableError.new("Validate -- row #{i}, key '_id', value #{rows[i]['_id']} is non-unique, conflicts with row #{unique_ids[rows[i]['_id']]}", {'row' => i, 'col' => '_id'})
-            end
-            
-            unique_ids[rows[i]['_id']] = i
-          elsif rows[i].include? '_id' # no ids, no autoid, but _id column
+            if unique_ids.include? rows[i][id_col]
+              raise VeritableError.new("Validate -- row #{i}, key '#{id_col}', value #{rows[i][id_col]} is non-unique, conflicts with row #{unique_ids[rows[i][id_col]]}", {'row' => i, 'col' => id_col})
+            end            
+            unique_ids[rows[i][id_col]] = i
+          elsif rows[i].include? id_col # no ids, no autoid, but _id column
             if opts['remove_extra_fields'] # just remove it
-              rows[i].delete '_id'
+              rows[i].delete id_col
             else
-              raise VeritableError.new("Validate -- row #{i}, key '_id' should not be included.", {'row' => i, 'col' => '_id'})
+              raise VeritableError.new("Validate -- row #{i}, key '#{id_col}' should not be included.", {'row' => i, 'col' => id_col})
             end
           end
           rows[i].keys.each {|c|
-            if c != '_id'
+            if c != id_col
               if not schema.include? c # keys missing from schema
                 if opts['remove_extra_fields'] # remove it
                   rows[i].delete c
