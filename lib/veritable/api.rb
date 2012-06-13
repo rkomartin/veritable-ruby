@@ -156,11 +156,11 @@ module Veritable
   # * +batch_upload_rows+ -- batch uploads multiple rows to the table
   # * +delete_row+ -- deletes a row from the table by its unique id
   # * +batch_delete_rows+ -- batch deletes multiple rows from the table
-  # * +analyses+ -- batch deletes multiple rows from the table
-  # * +analysis+ -- batch deletes multiple rows from the table
-  # * +create_analysis+ -- batch deletes multiple rows from the table
-  # * +delete_analysis+ -- batch deletes multiple rows from the table
-  # * +has_analysis?+ -- batch deletes multiple rows from the table
+  # * +analyses+ -- gets a Veritable::Cursor over the collection of analyses of the table
+  # * +analysis+ -- gets a single analysis of the table by its unique id
+  # * +create_analysis+ -- creates a new analysis of the table
+  # * +delete_analysis+ -- deletes an analysis of the table by its unique id
+  # * +has_analysis?+ -- checks if the table has an analysis with the given id
   # 
   # See also: https://dev.priorknowledge.com/docs/client/ruby  
   class Table
