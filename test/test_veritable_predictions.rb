@@ -6,6 +6,16 @@ module Boolean; end
 class TrueClass; include Boolean; end
 class FalseClass; include Boolean; end
 
+
+class Class
+  def publicize_methods
+    saved_private_instance_methods = self.private_instance_methods
+    self.class_eval { public *saved_private_instance_methods }
+    yield
+    self.class_eval { private *saved_private_instance_methods }
+  end
+end
+
 class VeritablePredictionsTest < Test::Unit::TestCase
   def initialize(*args)
     @api = Veritable.connect
@@ -68,19 +78,48 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   
   def test_make_prediction
     schema_ref = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
+
     r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
     pr = @a2.predict r
 	check_preds(schema_ref, [r], [pr])
 
-	r = {}
+    r = MultiJson.decode(MultiJson.encode({'_request_id' => 'foo', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
     pr = @a2.predict r
 	check_preds(schema_ref, [r], [pr])
-
-	r = {'real' => 1, 'bool' => nil}
-    pr = @a2.predict r
-
+	
   end
 
+  def test_make_batch_prediction
+  end
+
+  def test_make_prediction_with_empty_row
+	r = {}
+    pr = @a2.predict r
+  end
+
+  def test_make_prediction_with_invalid_column_fails
+	r = {'cat' => 'b', 'ct' => 2, 'real' => nil, 'jello' => false}
+	assert_raise(Veritable::VeritableError) {@a2.predict r}
+  end
+
+  def test_make_prediction_missing_request_id_fails
+  end
+
+  def test_batch_prediction_batching
+	@a2.class.publicize_methods do
+		@a2.raw_predict(nil,nil,nil,nil)
+	end
+  end
+  
+  def test_batch_prediction_too_many_cells
+  end
+  
+  def test_make_predictions_with_fixed_int_val_for_float_col
+	r = {'real' => 1, 'bool' => nil}
+    pr = @a2.predict r
+  end
+  
+  
 end
 
 class VeritablePredictionClassTest < Test::Unit::TestCase

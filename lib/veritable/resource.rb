@@ -14,5 +14,10 @@ module Veritable
     def link(name)
       @doc['links'][name]
     end
+	
+    # Private method: retrieves the cached copy of the user's limits
+    def api_limits
+		return @opts['api_limits']
+	end
   end
 end
