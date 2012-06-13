@@ -9,17 +9,6 @@ class FalseClass; include Boolean; end
 class VeritablePredictionsTest < Test::Unit::TestCase
   def initialize(*args)
     @api = Veritable.connect
-    @t = @api.create_table
-    @t.batch_upload_rows [
-      {'_id' => 'onebug', 'zim' => 'zam', 'wos' => 19.2},
-      {'_id' => 'twobug', 'zim' => 'vim', 'wos' => 11.3},
-      {'_id' => 'threebug', 'zim' => 'fop', 'wos' => 17.5},
-      {'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
-      {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
-      {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9}
-    ]
-    @s1 = Veritable::Schema.new({'zim' => {'type' => 'categorical'}, 'wos' => {'type' => 'real'}})
-    @a1 = @t.create_analysis @s1
 
     @t2 = @api.create_table
     @t2.batch_upload_rows [
@@ -37,45 +26,61 @@ class VeritablePredictionsTest < Test::Unit::TestCase
       'bool' => {'type' => 'boolean'}
     })
     @a2 = @t2.create_analysis @s2
+    @a2.wait
     super(*args)
   end
 
-  def test_make_prediction
-    @a1.wait
-    @a2.wait
-    o = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
-    r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
-    pr = @a2.predict r
-    r.keys.each {|k| assert (not pr[k].nil?) }
-    assert pr.is_a? Veritable::Prediction
-    assert pr.uncertainty.is_a? Hash
-    assert pr.schema.is_a? Veritable::Schema
-    assert pr.distribution.is_a? Array
-    assert pr.request.is_a? Hash
-    pr.request.keys.each {|k|
-      assert pr[k].is_a? o[k].class
-      assert pr.uncertainty[k].is_a? Float
-      assert((pr[k] == o[k] or r[k].nil?), "Failed with #{pr[k]}, #{o[k]}, #{r[k]}")
-    }
-    pr.distribution.each {|d| assert d.is_a? Hash}
-
-    pr = @a2.predict Hash.new
-    pr = @a2.predict ({'real' => 1, 'bool' => nil})
-
-    assert_raise(Veritable::VeritableError) {@a2.predict [
-      {'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
-      {'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}
-    ]}
-
-    assert_raise(Veritable::VeritableError) {@a1.predict r}
-
-    @a2.delete
-  end
-
   def teardown
-    @t.delete
     @t2.delete
   end
+
+  def check_preds(schema_ref, reqs, preds)
+	assert reqs.size == preds.size
+	(0...reqs.size).each {|i|
+		req = reqs[i]
+		pr = preds[i]
+		assert pr.is_a? Hash
+		assert pr.is_a? Veritable::Prediction
+		assert pr.uncertainty.is_a? Hash
+		if req.include? '_request_id'
+			assert req['_request_id'] == pr.request_id
+			assert req.size == (pr.size + 1)
+		else
+			assert pr.request_id.nil?
+			assert req.size == pr.size
+		end
+		pr.keys.each {|k|
+			assert pr[k].is_a? schema_ref[k].class
+			assert (pr[k] == req[k] or req[k].nil?)
+			assert pr.uncertainty[k].is_a? Float
+		}
+		assert pr.distribution.is_a? Array
+		pr.distribution.each {|d| 
+			assert d.is_a? Hash
+			assert d.size == pr.size
+			d.keys.each {|k|
+				assert d[k].is_a? schema_ref[k].class
+				assert (d[k] == req[k] or req[k].nil?)
+			}
+		}
+	}
+  end  
+  
+  def test_make_prediction
+    schema_ref = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
+    r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
+    pr = @a2.predict r
+	check_preds(schema_ref, [r], [pr])
+
+	r = {}
+    pr = @a2.predict r
+	check_preds(schema_ref, [r], [pr])
+
+	r = {'real' => 1, 'bool' => nil}
+    pr = @a2.predict r
+
+  end
+
 end
 
 class VeritablePredictionClassTest < Test::Unit::TestCase
@@ -89,8 +94,8 @@ class VeritablePredictionClassTest < Test::Unit::TestCase
       {'ColInt' => 8, 'ColFloat' => 8.1, 'ColCat' => 'b', 'ColBool' => false},
       {'ColInt' => 11, 'ColFloat' => 2.1, 'ColCat' => 'c', 'ColBool' => true}
     ]
-    @testpreds = Veritable::Prediction.new request, distribution, schema
-    @testpreds2 = Veritable::Prediction.new MultiJson.decode(MultiJson.encode(request)), MultiJson.decode(MultiJson.encode(distribution)), MultiJson.decode(MultiJson.encode(schema))
+    @testpreds = Veritable::Prediction.new request, distribution, schema, nil
+    @testpreds2 = Veritable::Prediction.new MultiJson.decode(MultiJson.encode(request)), MultiJson.decode(MultiJson.encode(distribution)), MultiJson.decode(MultiJson.encode(schema)), nil
   end
 
   def test_prediction_class

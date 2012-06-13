@@ -521,7 +521,7 @@ module Veritable
             raise VeritableError.new("Predict -- Error making predictions.")
           end
         end
-        Prediction.new(row, res, schema)
+        Prediction.new(row, res, schema, nil)
       elsif running?
         raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
       elsif failed?
@@ -712,6 +712,9 @@ module Veritable
     # The original predictions request, as a Hash
     attr_reader :request
 
+	# The original prediction '_request_id', nil if none was specified
+    attr_reader :request_id
+	
     # The underlying predicted distribution, as an Array of Hashes
     #
     # Each Hash represents a single draw from the predictive distribution, and should be regarded as equiprobable with the others.
@@ -738,12 +741,16 @@ module Veritable
     # Users should not call directly. Instead, call Veritable::Analysis#predict.
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
-    def initialize(request, distribution, schema)
+    def initialize(request, distribution, schema, request_id)
       @request = request
       @distribution = distribution
       @schema = Schema.new(schema)
       @uncertainty = Hash.new()
-
+	  @request_id = request_id
+		
+	  request.delete '_request_id'
+	  distribution.each {|d| d.delete '_request_id'}
+	  
       request.each { |k,v|
         if v.nil?
           self[k] = point_estimate k

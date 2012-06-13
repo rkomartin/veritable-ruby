@@ -437,18 +437,18 @@ module Veritable
           if opts['rename_columns'] # first apply the column renaming rules, if any
             if not opts['rename_columns'].is_a? Array
                 raise VeritableError.new("Must supply column renaming rules as a list of lists.",{})
-			end
+            end
             opts['rename_columns'].each {|rule| 
                 if not rule.is_a? Array
-					raise VeritableError.new("Must supply column renaming rules as a list of lists.",{})
-				end
-				if rows[i].include? rule[0]
-				    rows[i][rule[1]] = rows[i][rule[0]]
-					rows[i].delete rule[0]
-				end
-			}
+                    raise VeritableError.new("Must supply column renaming rules as a list of lists.",{})
+                end
+                if rows[i].include? rule[0]
+                    rows[i][rule[1]] = rows[i][rule[0]]
+                    rows[i].delete rule[0]
+                end
+            }
           end
-		  
+          
           if opts['assign_ids']
             rows[i][id_col] = i.to_s  # number the rows sequentially
           elsif opts['has_ids']
