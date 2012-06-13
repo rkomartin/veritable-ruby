@@ -67,8 +67,6 @@ class VeritablePredictionsTest < Test::Unit::TestCase
       {'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}
     ]}
 
-    assert_raise(Veritable::VeritableError) {@a2.predict(r, count=10000)}
-
     assert_raise(Veritable::VeritableError) {@a1.predict r}
 
     @a2.delete
