@@ -65,12 +65,16 @@ module Veritable
     opts[:ssl_verify] = true unless opts.has_key?(:ssl_verify)
     opts[:enable_gzip] = true unless opts.has_key?(:enable_gzip)
 
-    api = API.new(opts)
-    connection_test = api.root
-    status = connection_test["status"]
-    entropy = connection_test["entropy"]
-    raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}") if status != "SUCCESS"
-    raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}") if ! entropy.is_a?(Float)
+    begin
+        api = API.new(opts)
+        connection_test = api.root
+        status = connection_test["status"]
+        entropy = connection_test["entropy"]
+        raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}") if status != "SUCCESS"
+        raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}") if ! entropy.is_a?(Float)
+    rescue
+        raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}")
+    end
     return api
   end
 end

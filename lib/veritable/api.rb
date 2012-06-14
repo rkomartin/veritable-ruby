@@ -24,10 +24,10 @@ module Veritable
     include VeritableResource
 
     def initialize(opts=nil, doc=nil)
-	  super
-	  @opts['api_limits'] = get("user/limits")
+      super
+      @opts['api_limits'] = get("user/limits")
     end
-	
+    
     # Gets the root of the api
     #
     # ==== Returns
@@ -43,8 +43,8 @@ module Veritable
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby      
     def limits
-		return @opts['api_limits']
-	end
+        return @opts['api_limits']
+    end
 
     # Gets a cursor for the table collection
     #
@@ -477,11 +477,11 @@ module Veritable
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def schema
-		if @old_schema.nil?
-			@old_schema = Schema.new(get(link('schema')))
-		end
-		return @old_schema		
-	end
+        if @old_schema.nil?
+            @old_schema = Schema.new(get(link('schema')))
+        end
+        return @old_schema        
+    end
 
     # Blocks until the analysis succeeds or fails
     #
@@ -521,9 +521,9 @@ module Veritable
       if not row.is_a? Hash
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
-	  return raw_predict([row], count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])[0]
+      return raw_predict([row], count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])[0]
     end
-	
+    
 
     # Makes predictions based on the analysis for multiple rows at a time
     #
@@ -539,18 +539,18 @@ module Veritable
       if not rows.is_a? Array
         raise VeritableError.new("Predict -- Must provide an array of row hashes to make predictions.")
       end
-	  rows.each {|row|
-		if not row.is_a? Hash
-			raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
-		end
-		if not row['_request_id'].is_a? String
-			raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
-		end
-	  }
-	  return raw_predict(rows, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
+      rows.each {|row|
+        if not row.is_a? Hash
+            raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
+        end
+        if not row['_request_id'].is_a? String
+            raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
+        end
+      }
+      return raw_predict(rows, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
     end
 
-	
+    
     # Scores how related columns are to a column of interest
     #
     # ==== Arguments
@@ -615,60 +615,60 @@ module Veritable
 
     # The String description of the analysis
     def description; @doc['description']; end
-	
-	private
-	
-	def execute_batch(batch, count, preds)
-		if batch.size == 0
-			return
-		end
-		if batch.size == 1
-			data = batch[0]
-		else
-			data = batch
-		end
+    
+    private
+    
+    def execute_batch(batch, count, preds)
+        if batch.size == 0
+            return
+        end
+        if batch.size == 1
+            data = batch[0]
+        else
+            data = batch
+        end
         res = post(link('predict'), {'data' => data, 'count' => count, 'return_fixed' => false})
-		if not res.is_a? Array
-		  begin
+        if not res.is_a? Array
+          begin
             res.to_s
           rescue
             raise VeritableError.new("Predict -- Error making predictions.")
           else
             raise VeritableError.new("Predict -- Error making predictions: #{res}")
           end
-		end		  
-		(0...batch.size).each {|i|
-			request = batch[i].clone
-			request_id = request['_request_id']
-			distribution = res[(i * count)...((i + 1) * count)]
-			preds.push Prediction.new(request, distribution, schema, request_id)
-		}
-	end
-	
-	def raw_predict(rows, count, maxcells, maxcols)
+        end          
+        (0...batch.size).each {|i|
+            request = batch[i].clone
+            request_id = request['_request_id']
+            distribution = res[(i * count)...((i + 1) * count)]
+            preds.push Prediction.new(request, distribution, schema, request_id)
+        }
+    end
+    
+    def raw_predict(rows, count, maxcells, maxcols)
       update if running?
       if running?
         raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
       elsif failed?
         raise VeritableError.new("Predict -- Analysis with id #{_id} has failed and cannot predict.")
       elsif succeeded?
-		preds = []
-		ncells = 0
-		batch = []
-		rows.each {|row|
-			ncols = (row.values.select {|v| v.nil?}).size
-			tcols = (row.keys.select {|k| k != '_request_id'}).size
-			if tcols > maxcols
-				raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
-			end
-			n = ncols * count
-			if n > maxcells
-				raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values and count #{count}: exceeds predicted cell limit of #{maxcells}.")
-			end
-		}
-		rows.each {|row|
-			ncols = (row.values.select {|v| v.nil?}).size
-			n = ncols * count
+        preds = []
+        ncells = 0
+        batch = []
+        rows.each {|row|
+            ncols = (row.values.select {|v| v.nil?}).size
+            tcols = (row.keys.select {|k| k != '_request_id'}).size
+            if tcols > maxcols
+                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
+            end
+            n = ncols * count
+            if n > maxcells
+                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values and count #{count}: exceeds predicted cell limit of #{maxcells}.")
+            end
+        }
+        rows.each {|row|
+            ncols = (row.values.select {|v| v.nil?}).size
+            n = ncols * count
             if (ncells + n) > maxcells
                 execute_batch(batch, count, preds)
                 ncells = n
@@ -676,14 +676,14 @@ module Veritable
             else
                 batch.push row
                 ncells = ncells + n
-			end
-		}
-		execute_batch(batch, count, preds)
-		return preds
+            end
+        }
+        execute_batch(batch, count, preds)
+        return preds
       else
         raise VeritableError.new("Predict -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
       end
- 	end
+     end
 
 
 end
@@ -803,9 +803,9 @@ end
     # The original predictions request, as a Hash
     attr_reader :request
 
-	# The original prediction '_request_id', nil if none was specified
+    # The original prediction '_request_id', nil if none was specified
     attr_reader :request_id
-	
+    
     # The underlying predicted distribution, as an Array of Hashes
     #
     # Each Hash represents a single draw from the predictive distribution, and should be regarded as equiprobable with the others.
@@ -834,22 +834,22 @@ end
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def initialize(request, distribution, schema, request_id)
       @request = request
-	  @request.delete '_request_id'
+      @request.delete '_request_id'
 
       @schema = Schema.new(schema)
-	  @request_id = request_id
+      @request_id = request_id
 
-	  fixed = {}
+      fixed = {}
       @request.each { |k,v| 
-		if not v.nil?
-			fixed[k] = v
-		end
-	  }
-	  @distribution = distribution
-	  @distribution.each {|d| 
-		d.delete '_request_id'
-		d.update(fixed)
-	  }
+        if not v.nil?
+            fixed[k] = v
+        end
+      }
+      @distribution = distribution
+      @distribution.each {|d| 
+        d.delete '_request_id'
+        d.update(fixed)
+      }
 
       @uncertainty = Hash.new()
       @request.each { |k,v|
@@ -861,8 +861,8 @@ end
           @uncertainty[k] = 0.0
         end
       }
-	  
-	  
+      
+      
     end
     
     # Calculates the probability a column's value lies within a range.
