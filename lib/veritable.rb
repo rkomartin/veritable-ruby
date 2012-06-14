@@ -72,8 +72,8 @@ module Veritable
         entropy = connection_test["entropy"]
         raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}") if status != "SUCCESS"
         raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}") if ! entropy.is_a?(Float)
-    rescue
-        raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}")
+    rescue Exception => e
+        raise VeritableError.new("No Veritable server responding at #{opts[:api_base_url]}", {'inner_error' => e})
     end
     return api
   end

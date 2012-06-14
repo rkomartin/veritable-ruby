@@ -2,15 +2,6 @@
 
 require 'helper'
 
-class Class
-  def publicize_methods
-    saved_private_instance_methods = self.private_instance_methods
-    self.class_eval { public *saved_private_instance_methods }
-    yield
-    self.class_eval { private *saved_private_instance_methods }
-  end
-end
-
 class VeritableConnectTest < Test::Unit::TestCase
   def test_connect
     a = Veritable.connect
@@ -32,7 +23,7 @@ class VeritableConnectTest < Test::Unit::TestCase
     assert a.is_a? Veritable::API
   end
 
-  def test_connect_no_json_failes
+  def test_connect_no_json_fails
     assert_raise(Veritable::VeritableError) { Veritable.connect({:api_base_url => "http://www.google.com"}) }
   end
 

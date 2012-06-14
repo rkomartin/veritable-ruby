@@ -832,7 +832,7 @@ end
     # Users should not call directly. Instead, call Veritable::Analysis#predict.
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
-    def initialize(request, distribution, schema, request_id)
+    def initialize(request, distribution, schema, request_id=nil)
       @request = request
       @request.delete '_request_id'
 
