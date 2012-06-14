@@ -94,6 +94,13 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   end
 
   def test_make_batch_prediction
+    schema_ref = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
+    rr = (0...1).collect {|i| MultiJson.decode(MultiJson.encode({'_request_id' => i.to_s, 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
+	prs = @a2.batch_predict rr
+	check_preds(schema_ref,rr,prs)
+    rr = (0...10).collect {|i| MultiJson.decode(MultiJson.encode({'_request_id' => i.to_s, 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
+	prs = @a2.batch_predict rr
+	check_preds(schema_ref,rr,prs)
   end
 
   def test_make_prediction_with_empty_row
@@ -107,6 +114,8 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   end
 
   def test_make_batch_prediction_missing_request_id_fails
+    rr = (0...2).collect {|i| MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
+	assert_raise(Veritable::VeritableError) {@a2.batch_predict rr}	
   end
 
   def test_batch_prediction_batching

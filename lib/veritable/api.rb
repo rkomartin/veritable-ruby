@@ -524,6 +524,32 @@ module Veritable
 	  return raw_predict([row], count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])[0]
     end
 	
+
+    # Makes predictions based on the analysis for multiple rows at a time
+    #
+    # ==== Arguments
+    # * +rows+ -- an Array of Hashes, each of which represents a row whose missing values are to be predicted. Keys must be valid String ids of columns contained in the underlying table, and values must be either fixed (conditioning) values of an appropriate type for each column, or +nil+ for values to be predicted. Each row Hash must also have a '_request_id' key with a unique string value.
+    # * +count+ -- optionally specify the number of samples from the predictive distribution to return. Defaults to +100+.
+    #
+    # ==== Returns
+    # An Array of Veritable::Prediction objects
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def batch_predict(rows, count=100)
+      if not rows.is_a? Array
+        raise VeritableError.new("Predict -- Must provide an array of row hashes to make predictions.")
+      end
+	  rows.each {|row|
+		if not row.is_a? Hash
+			raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
+		end
+		if not row['_request_id'].is_a? String
+			raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
+		end
+	  }
+	  return raw_predict(rows, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
+    end
+
 	
     # Scores how related columns are to a column of interest
     #
