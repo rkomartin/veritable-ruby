@@ -19,8 +19,8 @@ class VeritableAPITest < Test::Unit::TestCase
   def test_api_limits
     l = @api.limits
     assert l.is_a? Hash
-    %w{predictions_max_count max_string_length schema_max_cols
-      max_row_batch_count max_categories predictions_max_cols table_max_rows
+    %w{max_string_length schema_max_cols
+      max_row_batch_count max_categories predictions_max_cols predictions_max_response_cells table_max_rows
       table_max_cols_per_row table_max_running_analyses max_paginated_item_count}.each {|k| 
         assert l.has_key? k
       }

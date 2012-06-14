@@ -1,3 +1,6 @@
+veritable-ruby 0.1.1 - June 12, 2012
+    * Added batch predictions via analysis.batch_predict
+
 veritable-ruby 0.1.0 - June 4, 2012
     * Initial release
 

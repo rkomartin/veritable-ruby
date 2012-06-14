@@ -20,6 +20,7 @@ module Veritable
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def initialize(message, opts=nil)
+      super(message)
       @message = message
       if opts.is_a? Hash
         @opts = opts
@@ -29,6 +30,9 @@ module Veritable
             @opts[k]
           }
         }
+        if @opts.include? 'inner_error'
+            set_backtrace(@opts['inner_error'].backtrace)
+        end
       end
     end
 
