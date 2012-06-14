@@ -302,6 +302,7 @@ module Veritable
       #   - +convert_types+ -- controls whether clean_data will attempt to convert cells in a column to be of the correct type (default: +true+)
       #   - +remove_invalids+ -- controls whether clean_data will automatically remove cells that are invalid for a given column (default: +true+)
       #   - +remove_extra_fields+ -- controls whether clean_data will automatically remove columns that are not contained in the schema (default: +true+)
+      #   - +rename_columns+ -- an array of two-valued arrays <tt>[[old_col_1, new_col_1],[old_col_2, new_col_2],...]</tt> of column names to rename. If +rename_columns+ is +false+, no columns are renamed. (default: <tt>[['_id','_request_id']]</tt>)
       #
       # ==== Raises
       # A Veritable::VeritableError containing further details if the predictions request does not validate against the schema
