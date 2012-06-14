@@ -630,7 +630,7 @@ module Veritable
 		ncells = 0
 		batch = []
 		rows.each {|row|
-			ncols = (row.values.select {|v| not v.nil?}).size
+			ncols = (row.values.select {|v| v.nil?}).size
 			tcols = (row.keys.select {|k| k != '_request_id'}).size
 			if tcols > maxcols
 				raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
@@ -641,7 +641,7 @@ module Veritable
 			end
 		}
 		rows.each {|row|
-			ncols = (row.values.select {|v| not v.nil?}).size
+			ncols = (row.values.select {|v| v.nil?}).size
 			n = ncols * count
             if (ncells + n) > maxcells
                 execute_batch(batch, count, preds)

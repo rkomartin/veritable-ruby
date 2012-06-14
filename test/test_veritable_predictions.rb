@@ -44,6 +44,13 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     @t2.delete
   end
 
+  def type_match(a, b)
+	if [true,false].include? a
+		return [true,false].include? b
+	end
+	return a.is_a? b.class
+  end
+  
   def check_preds(schema_ref, reqs, preds)
 	assert reqs.size == preds.size
 	(0...reqs.size).each {|i|
@@ -60,17 +67,17 @@ class VeritablePredictionsTest < Test::Unit::TestCase
 			assert req.size == pr.size
 		end
 		pr.keys.each {|k|
-			assert pr[k].is_a? schema_ref[k].class
-			assert (pr[k] == req[k] or req[k].nil?)
-			assert pr.uncertainty[k].is_a? Float
+			assert(type_match(pr[k], schema_ref[k]), "\nRequest: #{req} \nPredictions: #{pr} \nSchemaRef: #{schema_ref} \nKey: #{k}")
+			assert((pr[k] == req[k] or req[k].nil?), "\nRequest: #{req} \nPredictions: #{pr} \nSchemaRef: #{schema_ref} \nKey: #{k}")
+			assert((pr.uncertainty[k].is_a? Float), "\nRequest: #{req} \nUncertainty: #{pr.uncertainty} \nSchemaRef: #{schema_ref} \nKey: #{k}")
 		}
 		assert pr.distribution.is_a? Array
 		pr.distribution.each {|d| 
 			assert d.is_a? Hash
 			assert d.size == pr.size
 			d.keys.each {|k|
-				assert d[k].is_a? schema_ref[k].class
-				assert (d[k] == req[k] or req[k].nil?)
+				assert(type_match(d[k], schema_ref[k]), "\nRequest: #{req} \nDistribution: #{d} \nSchemaRef: #{schema_ref} \nKey: #{k}")
+				assert((d[k] == req[k] or req[k].nil?), "\nRequest: #{req} \nDistribution: #{d} \nSchemaRef: #{schema_ref} \nKey: #{k}")
 			}
 		}
 	}
@@ -78,15 +85,12 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   
   def test_make_prediction
     schema_ref = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
-
     r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
     pr = @a2.predict r
 	check_preds(schema_ref, [r], [pr])
-
     r = MultiJson.decode(MultiJson.encode({'_request_id' => 'foo', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
     pr = @a2.predict r
 	check_preds(schema_ref, [r], [pr])
-	
   end
 
   def test_make_batch_prediction
@@ -102,16 +106,38 @@ class VeritablePredictionsTest < Test::Unit::TestCase
 	assert_raise(Veritable::VeritableError) {@a2.predict r}
   end
 
-  def test_make_prediction_missing_request_id_fails
+  def test_make_batch_prediction_missing_request_id_fails
   end
 
   def test_batch_prediction_batching
+    schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
+	rr = [ 
+		{'_request_id' => 'a', 'cat' => nil, 'ct' => 2, 'real' => 3.1, 'bool' => false},
+		{'_request_id' => 'b', 'cat' => 'b', 'ct' => nil, 'real' => 3.1, 'bool' => false},
+		{'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
+		{'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
+		]	
 	@a2.class.publicize_methods do
-		@a2.raw_predict(nil,nil,nil,nil)
+		prs = @a2.raw_predict(rr,count=10,maxcells=30,maxcols=4)
+		check_preds(schema_ref,rr,prs)
+		prs = @a2.raw_predict(rr,count=10,maxcells=20,maxcols=4)
+		check_preds(schema_ref,rr,prs)
+		prs = @a2.raw_predict(rr,count=10,maxcells=17,maxcols=4)
+		check_preds(schema_ref,rr,prs)
+		prs = @a2.raw_predict(rr,count=10,maxcells=10,maxcols=4)
+		check_preds(schema_ref,rr,prs)
 	end
   end
   
   def test_batch_prediction_too_many_cells
+    schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
+	rr = [ {'_request_id' => 'a', 'cat' => nil, 'ct' => nil, 'real' => 3.1, 'bool' => false} ]	
+	@a2.class.publicize_methods do
+		prs = @a2.raw_predict(rr,count=10,maxcells=20,maxcols=4)
+		check_preds(schema_ref,rr,prs)
+		assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr,count=10,maxcells=20,maxcols=3)}
+		assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr,count=10,maxcells=19,maxcols=4)}
+	end
   end
   
   def test_make_predictions_with_fixed_int_val_for_float_col
