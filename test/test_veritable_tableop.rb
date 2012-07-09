@@ -142,8 +142,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
 
   def test_create_analyses_malformed_schemata
     [{'zim' => {'type' => 'generalized_wishart_process'}, 'wos' => {'type' => 'ibp'}},
-     'wimmel', {}, ['categorical', 'real'], true, false, 3, 3.143,
-     {'zim' => {'type' => 'categorical'}, 'wos' => {'type' => 'real'}, 'krob' => {'type' => 'count'}}
+     'wimmel', {}, ['categorical', 'real'], true, false, 3, 3.143
     ].each {|s| assert_raise(Veritable::VeritableError) {
       s = Veritable::Schema.new(s)
       @t.create_analysis(s) } }
@@ -162,7 +161,6 @@ class VeritableTableOpTest < Test::Unit::TestCase
     a.wait
     assert a.state == 'failed'
     assert a.error.is_a? Hash
-    assert a.error['code'] == 'ANALYSIS_SCHEMA_INVALID_TYPE_FOR_COLUMN'
   end
 
   def test_create_analysis_all_datatypes
@@ -170,7 +168,7 @@ class VeritableTableOpTest < Test::Unit::TestCase
     a.wait
     assert a.state == 'succeeded'
     assert a.created_at.is_a? String
-    # assert a.finished_at.is_a? String
+    assert a.finished_at.is_a? String
   end
 
   def test_create_analyses_datatype_mismatches
@@ -183,7 +181,6 @@ class VeritableTableOpTest < Test::Unit::TestCase
       a.wait
       assert a.state == 'failed'
       assert a.error.is_a? Hash
-      assert a.error['code'] == 'ANALYSIS_SCHEMA_INVALID_TYPE_FOR_COLUMN'
      }
   end
 
