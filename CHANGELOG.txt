@@ -1,3 +1,6 @@
+veritable-ruby 0.1.2 - July 9, 2012
+    * Added check for maximum count value (100000)
+
 veritable-ruby 0.1.1 - June 12, 2012
     * Added batch predictions via analysis.batch_predict
 
