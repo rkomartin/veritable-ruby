@@ -391,6 +391,7 @@ class VeritableTestUtils < Test::Unit::TestCase
     Veritable::Util.validate_data(testrows, @vschema)
   end
   
+
   def test_data_non_int_count_fail
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
@@ -405,6 +406,23 @@ class VeritableTestUtils < Test::Unit::TestCase
         assert e.col == 'ColInt'
     end
   end
+  
+
+  def test_data_count_limit_fail
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 100001, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    assert_raise Veritable::VeritableError do
+        Veritable::Util.validate_data(testrows, @vschema)
+    end
+    begin
+        Veritable::Util.validate_data(testrows, @vschema)
+    rescue Veritable::VeritableError => e
+        assert e.row == 1
+        assert e.col == 'ColInt'
+    end
+  end
+
   
   def test_pred_non_int_count_fail
     testrows = [
@@ -469,6 +487,30 @@ class VeritableTestUtils < Test::Unit::TestCase
     end
   end
 
+  def test_pred_int_count_limit_fail
+    testrows = [
+        {'_request_id' => '0', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_request_id' => '1', 'ColInt' => 100001, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    assert_raise Veritable::VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+    end
+    begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+    rescue Veritable::VeritableError => e
+        assert e.row == 1
+        assert e.col == 'ColInt'
+    end
+  end
+  
+  def test_pred_int_count_limit_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 100001, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema)
+    assert (not testrows[1].has_key?('ColInt'))
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+  
   def test_data_nonvalid_int_count_fixfail
     testrows = [
         {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
@@ -508,6 +550,16 @@ class VeritableTestUtils < Test::Unit::TestCase
     Veritable::Util.validate_data(testrows, @vschema)
   end
 
+  def test_data_int_count_limit_fix
+    testrows = [
+        {'_id' => '1', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_id' => '2', 'ColInt' => 100001, 'ColFloat' => 4.1, 'ColCat' => 'b', 'ColBool' => false}]
+    Veritable::Util.clean_data(testrows, @vschema)
+    assert (not testrows[1].has_key?('ColInt'))
+    Veritable::Util.validate_data(testrows, @vschema)
+  end
+
+  
   def test_pred_nonvalid_int_count_fix
     testrows = [
         {'_request_id' => '0', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},

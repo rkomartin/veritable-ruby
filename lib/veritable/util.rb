@@ -356,6 +356,8 @@ module Veritable
 
       private
 
+	  COUNT_LIMIT = 100000
+	  
       # Private helper function for form encoding
       def flatten_params(params, parent=nil)
         result = []
@@ -520,11 +522,11 @@ module Veritable
                   end
                   if rows[i][c].nil?
                     rows[i].delete c  # remove flagged values
-                  elsif opts['remove_invalids'] and (rows[i][c].is_a? Fixnum) and (rows[i][c] < 0)
+                  elsif opts['remove_invalids'] and (rows[i][c].is_a? Fixnum) and (rows[i][c] < 0 or rows[i][c] > COUNT_LIMIT)
                     rows[i].delete c
                   else
-                    if not (rows[i][c].is_a? Fixnum) or not (rows[i][c] >= 0) # catch invalids
-                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not a non-negative integer.", {'row' => i, 'col' => c})
+                    if not (rows[i][c].is_a? Fixnum) or not (rows[i][c] >= 0) or not (rows[i][c] <= COUNT_LIMIT) # catch invalids
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is #{rows[i][c].class}, not an integer between 0 and #{COUNT_LIMIT}.", {'row' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'real'
