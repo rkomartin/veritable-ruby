@@ -27,6 +27,7 @@ class TestVeritableRelated < Test::Unit::TestCase
 		  'bool' => {'type' => 'boolean'}
 		})
 		@a = @t.create_analysis(@schema)
+		@a.wait
     end
     def shutdown
 		@t.delete
