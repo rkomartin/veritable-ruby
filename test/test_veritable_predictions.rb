@@ -7,31 +7,39 @@ class TrueClass; include Boolean; end
 class FalseClass; include Boolean; end
 
 class VeritablePredictionsTest < Test::Unit::TestCase
-  def initialize(*args)
-    @api = Veritable.connect
 
-    @t2 = @api.create_table
-    @t2.batch_upload_rows [
-      {'_id' => 'row1', 'cat' => 'a', 'ct' => 0, 'real' => 1.02394, 'bool' => true},
-      {'_id' => 'row2', 'cat' => 'b', 'ct' => 0, 'real' => 0.92131, 'bool' => false},
-      {'_id' => 'row3', 'cat' => 'c', 'ct' => 1, 'real' => 1.82812, 'bool' => true},
-      {'_id' => 'row4', 'cat' => 'c', 'ct' => 1, 'real' => 0.81271, 'bool' => true},
-      {'_id' => 'row5', 'cat' => 'd', 'ct' => 2, 'real' => 1.14561, 'bool' => false},
-      {'_id' => 'row6', 'cat' => 'a', 'ct' => 5, 'real' => 1.03412, 'bool' => false}
-    ]
-    @s2 = Veritable::Schema.new({
-      'cat' => {'type' => 'categorical'},
-      'ct' => {'type' => 'count'},
-      'real' => {'type' => 'real'},
-      'bool' => {'type' => 'boolean'}
-    })
-    @a2 = @t2.create_analysis @s2
-    @a2.wait
-    super(*args)
+  class << self
+    def startup
+		@api = Veritable.connect
+
+		@t2 = @api.create_table
+		@t2.batch_upload_rows [
+		  {'_id' => 'row1', 'cat' => 'a', 'ct' => 0, 'real' => 1.02394, 'bool' => true},
+		  {'_id' => 'row2', 'cat' => 'b', 'ct' => 0, 'real' => 0.92131, 'bool' => false},
+		  {'_id' => 'row3', 'cat' => 'c', 'ct' => 1, 'real' => 1.82812, 'bool' => true},
+		  {'_id' => 'row4', 'cat' => 'c', 'ct' => 1, 'real' => 0.81271, 'bool' => true},
+		  {'_id' => 'row5', 'cat' => 'd', 'ct' => 2, 'real' => 1.14561, 'bool' => false},
+		  {'_id' => 'row6', 'cat' => 'a', 'ct' => 5, 'real' => 1.03412, 'bool' => false}
+		]
+		@s2 = Veritable::Schema.new({
+		  'cat' => {'type' => 'categorical'},
+		  'ct' => {'type' => 'count'},
+		  'real' => {'type' => 'real'},
+		  'bool' => {'type' => 'boolean'}
+		})
+		@a2 = @t2.create_analysis @s2
+		@a2.wait
+    end
+    def shutdown
+		@t2.delete
+    end
+  end
+  
+  def setup
+	@a2 = self.class.instance_variable_get :@a2
   end
 
   def teardown
-    @t2.delete
   end
 
   def type_match(a, b)
