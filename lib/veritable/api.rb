@@ -578,13 +578,13 @@ module Veritable
       end
     end
 
-    # Scores how similar rows are to a target row in the context
+    # Returns rows which are similar to a target row in the context
     # of a particular column of interest.
     #
     # ==== Arguments
     # * +row+ -- either a row '_id' string or a row hash corrsponding to the target row. If a row hash is provided, it must contain an '_id' key whose value is the '_id' of a row present in the table at the time of the analysis
     # * +column_id+ -- the name of the column of interest.
-    # * +max_rows+ -- the maximum number of rows to return. Default is +10+.
+    # * +max_rows+ -- the maximum number of similar rows to return. Default is +10+. The actual number of similar rows returned will be less than or equal to max_rows.
     # * +return_data+ -- if +true+, the full row content will be returned. If +false+, only the '_id' field for each row will be returned. Default is +true+.
     #
     # ==== Returns
