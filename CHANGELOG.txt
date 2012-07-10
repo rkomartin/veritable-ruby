@@ -1,3 +1,6 @@
+veritable-ruby 0.1.3 - July 12, 2012
+    * Support for similar API call to retrieve rows similar to a target row
+
 veritable-ruby 0.1.2 - July 9, 2012
     * Added check for maximum count value (100000)
 
