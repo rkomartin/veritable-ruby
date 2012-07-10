@@ -43,7 +43,6 @@ class TestVeritableRelated < Test::Unit::TestCase
   end
 
   def test_related_to
-    @a.wait
     @schema.keys.each {|col|
       assert @a.related_to(col).to_a.size <= 5
     }
