@@ -76,7 +76,7 @@ class TestVeritableSimilar < Test::Unit::TestCase
     s = @a.similar_to('row1','cat', opts={:max_rows => 1, :return_data => false})
     assert s.size == 1
     assert s[0].size == 2
-    assert not(s[0][0].include? 'ct')	
+    assert (not (s[0][0].include? 'ct'))
   end
 
   
