@@ -602,9 +602,8 @@ module Veritable
       end
       update if running?
       if succeeded?
-	    pdoc = {:data => row, :column => column_id, :max_rows => 10, :return_data => true}
-		pdoc.update(opts)
-        doc = post(link('similar'), pdoc)
+        doc = post(link('similar'), {:data => row, :column => column_id, 
+		                             :max_rows => 10, :return_data => true}.update(opts))
         return doc['data']
       elsif running?
         raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")

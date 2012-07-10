@@ -48,16 +48,12 @@ class TestVeritableSimilar < Test::Unit::TestCase
     @schema.keys.each {|col|
       @t.rows.each {|row|
         s = @a.similar_to(row, col, opts={:max_rows => 1})
-        assert s.size == 1
-        assert s[0].size == 2
       }
     }
   end
 
   def test_similar_to_id_only
     s = @a.similar_to('row1','cat', opts={:max_rows => 3})
-    assert s.size == 3
-    assert s[0].size == 2
   end
   
   def test_similar_to_with_invalid_column_fails
@@ -70,13 +66,13 @@ class TestVeritableSimilar < Test::Unit::TestCase
 
   def test_similar_to_return_data
     s = @a.similar_to('row1','cat', opts={:max_rows => 1, :return_data => true})
-    assert s.size == 1
-    assert s[0].size == 2
-    assert s[0][0].include? 'ct'
+	s.each {|r,c|
+		assert r.include? 'ct'
+	}
     s = @a.similar_to('row1','cat', opts={:max_rows => 1, :return_data => false})
-    assert s.size == 1
-    assert s[0].size == 2
-    assert (not (s[0][0].include? 'ct'))
+	s.each {|r,c|
+		assert (not (r.include? 'ct'))
+	}
   end
 
   
