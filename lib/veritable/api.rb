@@ -554,8 +554,8 @@ module Veritable
     # Scores how related columns are to a column of interest
     #
     # ==== Arguments
-    # * +column_id+ -- the id of the column of interest
-    # * +start+ -- the column id from which to start the cursor. Columns with related scores greater than or equal to the score of column +start+ will be returned by the cursor. Default is +nil+, in which case all columns in the table will be returned by the cursor.
+    # * +column_id+ -- the name of the column of interest
+    # * +start+ -- the column name from which to start the cursor. Columns with related scores greater than or equal to the score of column +start+ will be returned by the cursor. Default is +nil+, in which case all columns in the table will be returned by the cursor.
     # * +limit+ -- optionally limits the number of columns returned by the cursor. Default is +nil+, in which case the number of columns returned will not be limited.
     #
     # ==== Returns
@@ -578,6 +578,45 @@ module Veritable
       end
     end
 
+    # Returns rows which are similar to a target row in the context
+    # of a particular column of interest.
+    #
+    # ==== Arguments
+    # * +row+ -- either a row '_id' string or a row hash corrsponding to the target row. If a row hash is provided, it must contain an '_id' key whose value is the '_id' of a row present in the table at the time of the analysis
+    # * +column_id+ -- the name of the column of interest.
+    # * +max_rows+ -- the maximum number of similar rows to return. Default is +10+. The actual number of similar rows returned will be less than or equal to max_rows.
+    # * +return_data+ -- if +true+, the full row content will be returned. If +false+, only the '_id' field for each row will be returned. Default is +true+.
+    #
+    # ==== Returns
+    # An array of row entries ordered from most similar to least similar. 
+    # Each row entry is an array with the first element being the row and 
+    # the second element being a relatedness score between 0 to 1.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def similar_to(row, column_id, opts={:max_rows => 10, :return_data => true})
+      if row.is_a? String
+        row = {'_id' => row}
+      end
+      if not row.is_a? Hash
+        raise VeritableError.new("Similar -- Must provide an existing row to get similar!")
+      end
+      update if running?
+      if succeeded?
+        doc = post(link('similar'), {:data => row, :column => column_id, 
+		                             :max_rows => 10, :return_data => true}.update(opts))
+        return doc['data']
+      elsif running?
+        raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")
+      elsif failed?
+        raise VeritableError.new("Similar -- Analysis with id #{_id} has failed and cannot calculate similar.")
+      else
+        raise VeritableError.new("Similar -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
+    end
+
+    
+    
+    
     # Returns a string representation of the analysis resource
     def inspect; to_s; end
 
