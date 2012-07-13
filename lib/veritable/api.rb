@@ -603,7 +603,7 @@ module Veritable
       update if running?
       if succeeded?
         doc = post(link('similar'), {:data => row, :column => column_id, 
-		                             :max_rows => 10, :return_data => true}.update(opts))
+                                     :max_rows => 10, :return_data => true}.update(opts))
         return doc['data']
       elsif running?
         raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")
@@ -657,16 +657,22 @@ module Veritable
     
     private
     
-    def execute_batch(batch, count, preds)
+    def execute_batch(batch, count, preds, maxcells)
         if batch.size == 0
             return
         end
         if batch.size == 1
             data = batch[0]
+            ncols = (data.values.select {|v| v.nil?}).size
+            max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
+            res = []
+            while res.size < count do
+                batch_count = [max_batch_count, count - res.size].min
+                res = res + post(link('predict'), {'data' => data, 'count' => batch_count, 'return_fixed' => false})
+            end
         else
-            data = batch
+            res = post(link('predict'), {'data' => batch, 'count' => count, 'return_fixed' => false})
         end
-        res = post(link('predict'), {'data' => data, 'count' => count, 'return_fixed' => false})
         if not res.is_a? Array
           begin
             res.to_s
@@ -700,16 +706,15 @@ module Veritable
             if tcols > maxcols
                 raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
             end
-            n = ncols * count
-            if n > maxcells
-                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values and count #{count}: exceeds predicted cell limit of #{maxcells}.")
+            if ncols > maxcells
+                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values: exceeds predicted cell limit of #{maxcells}.")
             end
         }
         rows.each {|row|
             ncols = (row.values.select {|v| v.nil?}).size
             n = ncols * count
             if (ncells + n) > maxcells
-                execute_batch(batch, count, preds)
+                execute_batch(batch, count, preds, maxcells)
                 ncells = n
                 batch = [row]
             else
@@ -717,7 +722,7 @@ module Veritable
                 ncells = ncells + n
             end
         }
-        execute_batch(batch, count, preds)
+        execute_batch(batch, count, preds, maxcells)
         return preds
       else
         raise VeritableError.new("Predict -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
