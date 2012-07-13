@@ -603,7 +603,7 @@ module Veritable
       update if running?
       if succeeded?
         doc = post(link('similar'), {:data => row, :column => column_id, 
-		                             :max_rows => 10, :return_data => true}.update(opts))
+                                     :max_rows => 10, :return_data => true}.update(opts))
         return doc['data']
       elsif running?
         raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")
@@ -664,14 +664,14 @@ module Veritable
         if batch.size == 1
             data = batch[0]
             ncols = (data.values.select {|v| v.nil?}).size
-			max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
-			res = []
-			while res.size < count do
-				batch_count = [max_batch_count, count - res.size].min
-				res = res + post(link('predict'), {'data' => data, 'count' => batch_count, 'return_fixed' => false})
-			end
+            max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
+            res = []
+            while res.size < count do
+                batch_count = [max_batch_count, count - res.size].min
+                res = res + post(link('predict'), {'data' => data, 'count' => batch_count, 'return_fixed' => false})
+            end
         else
-			res = post(link('predict'), {'data' => batch, 'count' => count, 'return_fixed' => false})
+            res = post(link('predict'), {'data' => batch, 'count' => count, 'return_fixed' => false})
         end
         if not res.is_a? Array
           begin
