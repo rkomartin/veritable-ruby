@@ -513,6 +513,7 @@ module Veritable
       if not row.is_a? Hash
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
+	  row = row.clone
       row['_request_id'] = 'nonce'
       return raw_predict([row].each, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
     end
