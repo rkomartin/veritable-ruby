@@ -129,13 +129,13 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
         ]
     @a2.class.publicize_methods do
-        prs = @a2.raw_predict(rr.each,count=10,maxcells=30,maxcols=4) {|x| x}
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=30,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=4) {|x| x}
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr.each,count=10,maxcells=17,maxcols=4) {|x| x}
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=17,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr.each,count=10,maxcells=10,maxcols=4) {|x| x}
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=10,maxcols=4)
         check_preds(schema_ref,rr,prs)
     end
   end
