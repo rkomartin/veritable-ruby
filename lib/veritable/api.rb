@@ -6,6 +6,7 @@ require 'veritable/util'
 
 module Veritable
 
+
   # Represents the resources available to a user of the Veritable API.
   #
   # Users should not initialize directly; use Veritable.connect as the entry point.
@@ -232,7 +233,7 @@ module Veritable
     # Batch uploads multiple rows to the table
     #
     # ==== Arguments
-    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
+    # * +rows+ -- an Enumerable of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
     # * +per_page+ -- optionally controls the number of rows to upload in each batch. Defaults to +100+.
     #
     # ==== Returns
@@ -255,7 +256,7 @@ module Veritable
     # Batch deletes a list of rows from the table
     #
     # ==== Arguments
-    # * +rows+ -- an Array of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
+    # * +rows+ -- an Enumerable of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
     # * +per_page+ -- optionally controls the number of rows to delete in each batch. Defaults to +100+.
     #
     # ==== Returns
@@ -400,28 +401,18 @@ module Veritable
       if not per_page.is_a? Fixnum or not per_page > 0
         raise VeritableError.new("Batch upload or delete must have integer page size greater than 0.")
       end
-      rows = rows.collect {|row|
+      batch = []
+	  rows.each do |row|
         Util.check_row(row)
-        row
-      }
-      if (not rows.is_a? Array) and (not rows.is_a? Veritable::Cursor)
-        raise VeritableError.new("Must pass an array of row hashes or a cursor of rows to batch upload or delete.")
+		batch.push(row)
+		if batch.size == per_page
+            post(link('rows'), {'action' => action, 'rows' => batch})	
+			batch = []
+		end		
+	  end
+      if batch.size > 0
+        post(link('rows'), {'action' => action, 'rows' => batch})
       end
-      ct = (1..per_page).to_a.cycle
-      batch = Array.new()
-      ct.each { |ct|
-        if rows.empty?
-          if batch.size > 0
-            post(link('rows'), {'action' => action, 'rows' => batch})
-          end
-          break
-        end
-        batch.push rows.shift
-        if ct == per_page
-          post(link('rows'), {'action' => action, 'rows' => batch})
-          batch = Array.new()
-        end
-      }
     end
   end
 
@@ -521,33 +512,22 @@ module Veritable
       if not row.is_a? Hash
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
-      return raw_predict([row], count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])[0]
+	  return raw_predict([row], count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).to_a[0]
     end
     
 
     # Makes predictions based on the analysis for multiple rows at a time
     #
     # ==== Arguments
-    # * +rows+ -- an Array of Hashes, each of which represents a row whose missing values are to be predicted. Keys must be valid String ids of columns contained in the underlying table, and values must be either fixed (conditioning) values of an appropriate type for each column, or +nil+ for values to be predicted. Each row Hash must also have a '_request_id' key with a unique string value.
+    # * +rows+ -- an Enumerable of Hashes, each of which represents a row whose missing values are to be predicted. Keys must be valid String ids of columns contained in the underlying table, and values must be either fixed (conditioning) values of an appropriate type for each column, or +nil+ for values to be predicted. Each row Hash must also have a '_request_id' key with a unique string value.
     # * +count+ -- optionally specify the number of samples from the predictive distribution to return. Defaults to +100+.
     #
     # ==== Returns
-    # An Array of Veritable::Prediction objects
+    # An Enumerable of Veritable::Prediction objects
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def batch_predict(rows, count=100)
-      if not rows.is_a? Array
-        raise VeritableError.new("Predict -- Must provide an array of row hashes to make predictions.")
-      end
-      rows.each {|row|
-        if not row.is_a? Hash
-            raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
-        end
-        if not row['_request_id'].is_a? String
-            raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
-        end
-      }
-      return raw_predict(rows, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
+	  return raw_predict(PredictionsRequestCursor.new(rows), count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
     end
 
     
@@ -588,7 +568,7 @@ module Veritable
     # * +return_data+ -- if +true+, the full row content will be returned. If +false+, only the '_id' field for each row will be returned. Default is +true+.
     #
     # ==== Returns
-    # An array of row entries ordered from most similar to least similar. 
+    # An Enumerable of row entries ordered from most similar to least similar. 
     # Each row entry is an array with the first element being the row and 
     # the second element being a relatedness score between 0 to 1.
     # 
@@ -604,7 +584,7 @@ module Veritable
       if succeeded?
         doc = post(link('similar'), {:data => row, :column => column_id, 
                                      :max_rows => 10, :return_data => true}.update(opts))
-        return doc['data']
+        return SimilarCursor.new(doc['data'])
       elsif running?
         raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")
       elsif failed?
@@ -656,81 +636,130 @@ module Veritable
     def description; @doc['description']; end
     
     private
-    
-    def execute_batch(batch, count, preds, maxcells)
-        if batch.size == 0
-            return
-        end
-        if batch.size == 1
-            data = batch[0]
-            ncols = (data.values.select {|v| v.nil?}).size
-            max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
-            res = []
-            while res.size < count do
-                batch_count = [max_batch_count, count - res.size].min
-                res = res + post(link('predict'), {'data' => data, 'count' => batch_count, 'return_fixed' => false})
-            end
-        else
-            res = post(link('predict'), {'data' => batch, 'count' => count, 'return_fixed' => false})
-        end
-        if not res.is_a? Array
-          begin
-            res.to_s
-          rescue
-            raise VeritableError.new("Predict -- Error making predictions.")
-          else
-            raise VeritableError.new("Predict -- Error making predictions: #{res}")
-          end
-        end          
-        (0...batch.size).each {|i|
-            request = batch[i].clone
-            request_id = request['_request_id']
-            distribution = res[(i * count)...((i + 1) * count)]
-            preds.push Prediction.new(request, distribution, schema, request_id)
-        }
-    end
-    
-    def raw_predict(rows, count, maxcells, maxcols)
-      update if running?
-      if running?
-        raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
-      elsif failed?
-        raise VeritableError.new("Predict -- Analysis with id #{_id} has failed and cannot predict.")
-      elsif succeeded?
-        preds = []
-        ncells = 0
-        batch = []
-        rows.each {|row|
-            ncols = (row.values.select {|v| v.nil?}).size
-            tcols = (row.keys.select {|k| k != '_request_id'}).size
-            if tcols > maxcols
-                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
-            end
-            if ncols > maxcells
-                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values: exceeds predicted cell limit of #{maxcells}.")
-            end
-        }
-        rows.each {|row|
-            ncols = (row.values.select {|v| v.nil?}).size
-            n = ncols * count
-            if (ncells + n) > maxcells
-                execute_batch(batch, count, preds, maxcells)
-                ncells = n
-                batch = [row]
-            else
-                batch.push row
-                ncells = ncells + n
-            end
-        }
-        execute_batch(batch, count, preds, maxcells)
-        return preds
-      else
-        raise VeritableError.new("Predict -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
-      end
-     end
 
+	def raw_predict(rows, count, maxcells, maxcols)
+	    return PredictCursor.new(self, link('predict'), rows, count, maxcells, maxcols)
+	end
+
+	class PredictionsRequestCursor
+		include Enumerable
+		def initialize(rows)
+			@rows = rows
+		end
+		def each
+			@rows.each do |row|
+				if not row.is_a? Hash
+					raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
+				end
+				if not row['_request_id'].is_a? String
+					raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
+				end
+				yield row
+			end
+		end
+	end
+
+    class PredictCursor
+        include Enumerable
+		
+		def initialize(analysis, predict_link, rows, count, maxcells, maxcols)
+			@analysis = analysis
+			@predict_link = predict_link
+		    @rows = rows
+			@count = count
+			@maxcells = maxcells
+			@maxcols = maxcols
+		end
+        
+		def each
+		  rows = @rows
+		  count = @count
+		  maxcells = @maxcells
+		  maxcols = @maxcols		  
+		  @analysis.update if @analysis.running?
+		  if @analysis.running?
+			raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
+		  elsif @analysis.failed?
+			raise VeritableError.new("Predict -- Analysis with id #{_id} has failed and cannot predict.")
+		  elsif @analysis.succeeded?
+			ncells = 0
+			batch = []
+			rows.each {|row|
+				ncols = (row.values.select {|v| v.nil?}).size
+				tcols = (row.keys.select {|k| k != '_request_id'}).size
+				if tcols > maxcols
+					raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
+				end
+				if ncols > maxcells
+					raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values: exceeds predicted cell limit of #{maxcells}.")
+				end
+				n = ncols * count
+				if (ncells + n) > maxcells
+					execute_batch(batch, count, maxcells).each {|p| yield p}
+					ncells = n
+					batch = [row]
+				else
+					batch.push row
+					ncells = ncells + n
+				end
+			}
+			execute_batch(batch, count, maxcells).each {|p| yield p}
+		  else
+			raise VeritableError.new("Predict -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+		  end
+		end
+		
+		def execute_batch(batch, count, maxcells)
+			if batch.size == 0
+				return []
+			end
+			if batch.size == 1
+				data = batch[0]
+				ncols = (data.values.select {|v| v.nil?}).size
+				max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
+				res = []
+				while res.size < count do
+					batch_count = [max_batch_count, count - res.size].min
+					res = res + @analysis.post(@predict_link, {'data' => data, 'count' => batch_count, 'return_fixed' => false})
+				end
+			else
+				res = @analysis.post(@predict_link, {'data' => batch, 'count' => count, 'return_fixed' => false})
+			end
+			if not res.is_a? Array
+			  begin
+				res.to_s
+			  rescue
+				raise VeritableError.new("Predict -- Error making predictions.")
+			  else
+				raise VeritableError.new("Predict -- Error making predictions: #{res}")
+			  end
+			end  
+			preds = []
+			(0...batch.size).each {|i|
+				request = batch[i].clone
+				request_id = request['_request_id']
+				distribution = res[(i * count)...((i + 1) * count)]
+				preds.push Prediction.new(request, distribution, @analysis.schema, request_id)
+			}
+			return preds
+		end
+		
+	end
+	
+	class SimilarCursor
+		include Enumerable
+		def initialize(r)
+		  @r = r
+		end
+		def each
+		  @r.each do |x|
+			yield x
+		  end
+		end
+	end
 
 end
+
 
   # Represents a schema for a Veritable analysis
   #
