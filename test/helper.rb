@@ -19,3 +19,21 @@ class Class
     self.class_eval { private *saved_private_instance_methods }
   end
 end
+
+# This cursor is an Enumerator that ensures only one pass is made through the source data
+class OnePassCursor
+    include Enumerable
+    def initialize(r)
+      @r = r
+      @has_run = false
+    end
+    def each
+      if @has_run
+        raise Exception.new "Can only enumerate once"
+      end
+      @has_run = true
+      @r.each do |x|
+        yield x
+      end
+    end
+end

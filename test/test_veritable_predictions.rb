@@ -99,8 +99,9 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     prs = @a2.batch_predict rr
     check_preds(schema_ref,rr,prs)
     rr = (0...10).collect {|i| MultiJson.decode(MultiJson.encode({'_request_id' => i.to_s, 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
-     wrr = rr.each
-    prs = @a2.batch_predict wrr
+    prs = @a2.batch_predict rr
+    check_preds(schema_ref,rr,prs)
+    prs = @a2.batch_predict OnePassCursor.new(rr)
     check_preds(schema_ref,rr,prs)
   end
 
