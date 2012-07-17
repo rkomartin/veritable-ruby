@@ -440,6 +440,8 @@ module Veritable
   class Analysis
     include VeritableResource
 
+    Enumerator = Enumerable::Enumerator unless Object.const_defined? :Enumerator
+    
     # Refreshes the local representation of the analysis
     #
     # ==== Returns
