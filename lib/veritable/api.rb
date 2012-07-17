@@ -1,6 +1,5 @@
 require 'veritable/cursor'
 require 'veritable/datatypes'
-require 'veritable/enumerator'
 require 'veritable/errors'
 require 'veritable/resource'
 require 'veritable/util'
@@ -633,8 +632,6 @@ module Veritable
     def description; @doc['description']; end
     
     private
-
-    Enumerator = Veritable::Enumerable::Enumerator unless Object.const_defined? :Enumerator
 
     def raw_predict(rows, count, maxcells, maxcols)
       Enumerator.new { |y|
