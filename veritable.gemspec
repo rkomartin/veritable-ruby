@@ -16,6 +16,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency('rest-client', '~> 1.4')
   gem.add_dependency('uuid')
   gem.add_dependency('multi_json')
+  gem.add_dependency('backports')
   gem.add_development_dependency('test-unit')
   gem.add_development_dependency('rake')
   gem.add_development_dependency('rdoc')

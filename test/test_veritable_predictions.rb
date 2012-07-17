@@ -51,6 +51,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   
   def check_preds(schema_ref, reqs, preds)
     preds = preds.to_a
+    reqs = reqs.to_a
     assert reqs.size == preds.size
     (0...reqs.size).each {|i|
         req = reqs[i]
@@ -98,7 +99,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     prs = @a2.batch_predict rr
     check_preds(schema_ref,rr,prs)
     rr = (0...10).collect {|i| MultiJson.decode(MultiJson.encode({'_request_id' => i.to_s, 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
-     wrr = SimpleCursor.new(rr)
+     wrr = rr.each
     prs = @a2.batch_predict wrr
     check_preds(schema_ref,rr,prs)
   end
@@ -125,36 +126,18 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'b', 'cat' => 'b', 'ct' => nil, 'real' => 3.1, 'bool' => false},
         {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
-        ]    
+        ]
     @a2.class.publicize_methods do
-        prs = @a2.raw_predict(rr,count=10,maxcells=30,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=30,maxcols=4) {|x| x}
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr,count=10,maxcells=20,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=4) {|x| x}
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr,count=10,maxcells=17,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=17,maxcols=4) {|x| x}
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr,count=10,maxcells=10,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=10,maxcols=4) {|x| x}
         check_preds(schema_ref,rr,prs)
     end
   end
-  
-  class SimpleCursor
-    include Enumerable
-    def initialize(r)
-      @r = r
-      @has_run = false
-    end
-    def each
-      if @has_run
-        raise Exception.new "Can only enumerate once"
-      end
-      @has_run = true
-      @r.each do |x|
-        yield x
-      end
-    end
-  end
-
   
   def test_batch_prediction_streaming
     schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
@@ -164,7 +147,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
         ]
-    wrr = SimpleCursor.new(rr)
+    wrr = rr.each
     @a2.class.publicize_methods do
         prs = @a2.raw_predict(wrr,count=10,maxcells=1,maxcols=4)
         check_preds(schema_ref,rr,prs)
@@ -178,7 +161,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'b', 'cat' => 'b', 'ct' => nil, 'real' => 3.1, 'bool' => false},
         {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
-        ]    
+        ].each
     @a2.class.publicize_methods do
         prs = @a2.raw_predict(rr,count=10,maxcells=1,maxcols=4)
         check_preds(schema_ref,rr,prs)
@@ -187,12 +170,12 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   
   def test_batch_prediction_too_many_cells
     schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
-    rr = [ {'_request_id' => 'a', 'cat' => nil, 'ct' => nil, 'real' => 3.1, 'bool' => false} ]    
+    rr = [ {'_request_id' => 'a', 'cat' => nil, 'ct' => nil, 'real' => 3.1, 'bool' => false} ] 
     @a2.class.publicize_methods do
-        prs = @a2.raw_predict(rr,count=10,maxcells=20,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr,count=10,maxcells=20,maxcols=3).to_a}
-        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr,count=10,maxcells=1,maxcols=4).to_a}
+        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=3).to_a}
+        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr.each,count=10,maxcells=1,maxcols=4).to_a}
     end
   end
   
