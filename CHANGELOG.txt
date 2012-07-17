@@ -1,3 +1,8 @@
+veritable-ruby 0.1.4 - July 16, 2012
+    * analysis.batch_predict returns an Enumerator over Prediction objects instead of a list
+    * analysis.similar_to returns an Enumerator over row entries instead of a list
+    * table.batch_upload_rows and table.batch_delete_rows accept Enumerators as arguments
+
 veritable-ruby 0.1.3 - July 12, 2012
     * Support for similar API call to retrieve rows similar to a target row
     * Implemented count-batching for predictions

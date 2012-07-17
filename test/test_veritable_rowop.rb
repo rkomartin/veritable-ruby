@@ -42,13 +42,23 @@ class VeritableRowOpTest < Test::Unit::TestCase
     @t.upload_row({'_id' => 'twobug', 'zim' => 'fop', 'wos' => 17.5})
   end
 
+  
   def test_batch_upload_rows
     id = MultiJson.decode(MultiJson.encode({'id' => "sevenbug"}))['id']
-    @t.batch_upload_rows(
-        [{'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
+    rr = [{'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
          {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
          {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9},
-         {'_id' => id, 'zim' => 'zop', 'wos' => 14.9}])
+         {'_id' => id, 'zim' => 'zop', 'wos' => 14.9}]
+    @t.batch_upload_rows(rr)
+  end
+
+  def test_batch_upload_rows_enumerator
+    id = MultiJson.decode(MultiJson.encode({'id' => "sevenbug"}))['id']
+    rr = [{'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
+         {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
+         {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9},
+         {'_id' => id, 'zim' => 'zop', 'wos' => 14.9}]
+    @t.batch_upload_rows(OnePassCursor.new(rr))
   end
 
   def test_batch_upload_rows_invalid_ids

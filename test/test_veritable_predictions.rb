@@ -50,6 +50,8 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   end
   
   def check_preds(schema_ref, reqs, preds)
+    preds = preds.to_a
+    reqs = reqs.to_a
     assert reqs.size == preds.size
     (0...reqs.size).each {|i|
         req = reqs[i]
@@ -80,7 +82,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         }
     }
   end  
-  
+
   def test_make_prediction
     schema_ref = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}))
     r = MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))
@@ -99,6 +101,8 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     rr = (0...10).collect {|i| MultiJson.decode(MultiJson.encode({'_request_id' => i.to_s, 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
     prs = @a2.batch_predict rr
     check_preds(schema_ref,rr,prs)
+    prs = @a2.batch_predict OnePassCursor.new(rr)
+    check_preds(schema_ref,rr,prs)
   end
 
   def test_make_prediction_with_empty_row
@@ -108,12 +112,12 @@ class VeritablePredictionsTest < Test::Unit::TestCase
 
   def test_make_prediction_with_invalid_column_fails
     r = {'cat' => 'b', 'ct' => 2, 'real' => nil, 'jello' => false}
-    assert_raise(Veritable::VeritableError) {@a2.predict r}
+    assert_raise(Veritable::VeritableError) {(@a2.predict r).to_a}
   end
 
   def test_make_batch_prediction_missing_request_id_fails
     rr = (0...2).collect {|i| MultiJson.decode(MultiJson.encode({'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
-    assert_raise(Veritable::VeritableError) {@a2.batch_predict rr}    
+    assert_raise(Veritable::VeritableError) {(@a2.batch_predict rr).to_a}    
   end
 
   def test_batch_prediction_batching
@@ -123,19 +127,34 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'b', 'cat' => 'b', 'ct' => nil, 'real' => 3.1, 'bool' => false},
         {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
-        ]    
+        ]
     @a2.class.publicize_methods do
-        prs = @a2.raw_predict(rr,count=10,maxcells=30,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=30,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr,count=10,maxcells=20,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr,count=10,maxcells=17,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=17,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        prs = @a2.raw_predict(rr,count=10,maxcells=10,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=10,maxcols=4)
         check_preds(schema_ref,rr,prs)
     end
   end
-
+  
+  def test_batch_prediction_streaming
+    schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
+    rr = [ 
+        {'_request_id' => 'a', 'cat' => nil, 'ct' => 2, 'real' => 3.1, 'bool' => false},
+        {'_request_id' => 'b', 'cat' => 'b', 'ct' => nil, 'real' => 3.1, 'bool' => false},
+        {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
+        {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
+        ]
+    wrr = rr.each
+    @a2.class.publicize_methods do
+        prs = @a2.raw_predict(wrr,count=10,maxcells=1,maxcols=4)
+        check_preds(schema_ref,rr,prs)
+    end
+  end
+  
   def test_batch_prediction_count_batching
     schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
     rr = [ 
@@ -143,7 +162,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'b', 'cat' => 'b', 'ct' => nil, 'real' => 3.1, 'bool' => false},
         {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
-        ]    
+        ].each
     @a2.class.publicize_methods do
         prs = @a2.raw_predict(rr,count=10,maxcells=1,maxcols=4)
         check_preds(schema_ref,rr,prs)
@@ -152,12 +171,12 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   
   def test_batch_prediction_too_many_cells
     schema_ref = {'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => false}
-    rr = [ {'_request_id' => 'a', 'cat' => nil, 'ct' => nil, 'real' => 3.1, 'bool' => false} ]    
+    rr = [ {'_request_id' => 'a', 'cat' => nil, 'ct' => nil, 'real' => 3.1, 'bool' => false} ] 
     @a2.class.publicize_methods do
-        prs = @a2.raw_predict(rr,count=10,maxcells=20,maxcols=4)
+        prs = @a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=4)
         check_preds(schema_ref,rr,prs)
-        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr,count=10,maxcells=20,maxcols=3)}
-        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr,count=10,maxcells=1,maxcols=4)}
+        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr.each,count=10,maxcells=20,maxcols=3).to_a}
+        assert_raise(Veritable::VeritableError) {@a2.raw_predict(rr.each,count=10,maxcells=1,maxcols=4).to_a}
     end
   end
   
@@ -165,7 +184,6 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     r = {'real' => 1, 'bool' => nil}
     pr = @a2.predict r
   end
-  
   
 end
 
