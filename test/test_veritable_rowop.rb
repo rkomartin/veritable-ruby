@@ -45,27 +45,27 @@ class VeritableRowOpTest < Test::Unit::TestCase
   class SimpleCursor
     include Enumerable
     def initialize(r)
-	  @r = r
-	  @has_run = false
+      @r = r
+      @has_run = false
     end
-	def each
-	  if @has_run
-	    raise Exception.new "Can only enumerate once"
-	  end
-	  @has_run = true
-	  @r.each do |x|
-	    yield x
-	  end
+    def each
+      if @has_run
+        raise Exception.new "Can only enumerate once"
+      end
+      @has_run = true
+      @r.each do |x|
+        yield x
+      end
     end
   end
   
   def test_batch_upload_rows
     id = MultiJson.decode(MultiJson.encode({'id' => "sevenbug"}))['id']
-	rr = [{'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
+    rr = [{'_id' => 'fourbug', 'zim' => 'zop', 'wos' => 10.3},
          {'_id' => 'fivebug', 'zim' => 'zam', 'wos' => 9.3},
          {'_id' => 'sixbug', 'zim' => 'zop', 'wos' => 18.9},
          {'_id' => id, 'zim' => 'zop', 'wos' => 14.9}]
-	wrr = SimpleCursor.new(rr)
+    wrr = SimpleCursor.new(rr)
     @t.batch_upload_rows(wrr)
     @t.batch_upload_rows(rr)
   end

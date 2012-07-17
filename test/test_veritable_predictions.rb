@@ -98,7 +98,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
     prs = @a2.batch_predict rr
     check_preds(schema_ref,rr,prs)
     rr = (0...10).collect {|i| MultiJson.decode(MultiJson.encode({'_request_id' => i.to_s, 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false}))}
- 	wrr = SimpleCursor.new(rr)
+     wrr = SimpleCursor.new(rr)
     prs = @a2.batch_predict wrr
     check_preds(schema_ref,rr,prs)
   end
@@ -141,17 +141,17 @@ class VeritablePredictionsTest < Test::Unit::TestCase
   class SimpleCursor
     include Enumerable
     def initialize(r)
-	  @r = r
-	  @has_run = false
+      @r = r
+      @has_run = false
     end
-	def each
-	  if @has_run
-	    raise Exception.new "Can only enumerate once"
-	  end
-	  @has_run = true
-	  @r.each do |x|
-	    yield x
-	  end
+    def each
+      if @has_run
+        raise Exception.new "Can only enumerate once"
+      end
+      @has_run = true
+      @r.each do |x|
+        yield x
+      end
     end
   end
 
@@ -164,7 +164,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
         {'_request_id' => 'c', 'cat' => 'b', 'ct' => 2, 'real' => nil, 'bool' => false},
         {'_request_id' => 'd', 'cat' => 'b', 'ct' => 2, 'real' => 3.1, 'bool' => nil}
         ]
-	wrr = SimpleCursor.new(rr)
+    wrr = SimpleCursor.new(rr)
     @a2.class.publicize_methods do
         prs = @a2.raw_predict(wrr,count=10,maxcells=1,maxcols=4)
         check_preds(schema_ref,rr,prs)
