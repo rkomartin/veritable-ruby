@@ -515,7 +515,7 @@ module Veritable
       end
 	  row = row.clone
       row['_request_id'] = 'nonce'
-      return raw_predict([row].each, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
+      return raw_predict([row].to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
     end
     
 
@@ -530,7 +530,7 @@ module Veritable
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def batch_predict(rows, count=100)
-      return raw_predict(rows.each, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
+      return raw_predict(rows.to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
     end
 
     
@@ -587,7 +587,7 @@ module Veritable
       if succeeded?
         doc = post(link('similar'), {:data => row, :column => column_id, 
                                      :max_rows => 10, :return_data => true}.update(opts))
-        return doc['data'].each
+        return doc['data'].to_enum
       elsif running?
         raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")
       elsif failed?
