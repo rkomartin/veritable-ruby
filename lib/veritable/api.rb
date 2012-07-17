@@ -513,8 +513,7 @@ module Veritable
       if not row.is_a? Hash
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
-      row = row.clone
-      raw_predict([row].to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
+      raw_predict([row].to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'], false).next
     end
     
 
@@ -529,7 +528,7 @@ module Veritable
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def batch_predict(rows, count=100)
-      return raw_predict(rows.to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
+      return raw_predict(rows.to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'], true)
     end
 
     
@@ -636,7 +635,7 @@ module Veritable
     
     private
 
-    def raw_predict(rows, count, maxcells, maxcols)
+    def raw_predict(rows, count, maxcells, maxcols, requires_id=true)
       return Enumerator.new { |y|
         update if running?
         if running?
@@ -650,10 +649,8 @@ module Veritable
             if not row.is_a? Hash
               raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
             end
-            if not row['_request_id'].is_a? String
-              if (rows.peek rescue false)
-                raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
-              end
+            if requires_id and not row['_request_id'].is_a? String
+              raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
             end
             ncols = (row.values.select {|v| v.nil?}).size
             tcols = (row.keys.select {|k| k != '_request_id'}).size
