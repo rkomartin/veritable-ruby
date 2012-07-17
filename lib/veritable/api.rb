@@ -512,7 +512,8 @@ module Veritable
       if not row.is_a? Hash
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
-      return raw_predict([row], count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).to_a[0]
+      row['_request_id'] = 'nonce'
+      return raw_predict([row].each, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
     end
     
 
@@ -527,7 +528,7 @@ module Veritable
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def batch_predict(rows, count=100)
-      return raw_predict(PredictionsRequestCursor.new(rows), count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
+      return raw_predict(rows.each, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols'])
     end
 
     
@@ -584,7 +585,7 @@ module Veritable
       if succeeded?
         doc = post(link('similar'), {:data => row, :column => column_id, 
                                      :max_rows => 10, :return_data => true}.update(opts))
-        return SimilarCursor.new(doc['data'])
+        return doc['data'].each
       elsif running?
         raise VeritableError.new("Similar -- Analysis with id #{_id} is still running and not yet ready to calculate similar.")
       elsif failed?
@@ -594,9 +595,6 @@ module Veritable
       end
     end
 
-    
-    
-    
     # Returns a string representation of the analysis resource
     def inspect; to_s; end
 
@@ -638,128 +636,85 @@ module Veritable
     private
 
     def raw_predict(rows, count, maxcells, maxcols)
-        return PredictCursor.new(self, link('predict'), rows, count, maxcells, maxcols)
-    end
-
-    class PredictionsRequestCursor
-        include Enumerable
-        def initialize(rows)
-            @rows = rows
-        end
-        def each
-            @rows.each do |row|
-                if not row.is_a? Hash
-                    raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
-                end
-                if not row['_request_id'].is_a? String
-                    raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
-                end
-                yield row
+      Enumerator.new { |y|
+        update if running?
+        if running?
+          raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
+        elsif failed?
+          raise VeritableError.new("Predict -- Analysis with id #{_id} has failed and cannot predict.")
+        elsif succeeded?
+          ncells = 0
+          batch = []
+          while (true)
+            begin
+              row = rows.next
+            rescue StopIteration
+              break
             end
-        end
-    end
-
-    class PredictCursor
-        include Enumerable
-        
-        def initialize(analysis, predict_link, rows, count, maxcells, maxcols)
-            @analysis = analysis
-            @predict_link = predict_link
-            @rows = rows
-            @count = count
-            @maxcells = maxcells
-            @maxcols = maxcols
-        end
-        
-        def each
-          rows = @rows
-          count = @count
-          maxcells = @maxcells
-          maxcols = @maxcols          
-          @analysis.update if @analysis.running?
-          if @analysis.running?
-            raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
-          elsif @analysis.failed?
-            raise VeritableError.new("Predict -- Analysis with id #{_id} has failed and cannot predict.")
-          elsif @analysis.succeeded?
-            ncells = 0
-            batch = []
-            rows.each {|row|
-                ncols = (row.values.select {|v| v.nil?}).size
-                tcols = (row.keys.select {|k| k != '_request_id'}).size
-                if tcols > maxcols
-                    raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
-                end
-                if ncols > maxcells
-                    raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values: exceeds predicted cell limit of #{maxcells}.")
-                end
-                n = ncols * count
-                if (ncells + n) > maxcells
-                    execute_batch(batch, count, maxcells).each {|p| yield p}
-                    ncells = n
-                    batch = [row]
-                else
-                    batch.push row
-                    ncells = ncells + n
-                end
-            }
-            execute_batch(batch, count, maxcells).each {|p| yield p}
-          else
-            raise VeritableError.new("Predict -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
-          end
-        end
-        
-        def execute_batch(batch, count, maxcells)
-            if batch.size == 0
-                return []
+            if not row.is_a? Hash
+              raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
             end
-            if batch.size == 1
-                data = batch[0]
-                ncols = (data.values.select {|v| v.nil?}).size
-                max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
-                res = []
-                while res.size < count do
-                    batch_count = [max_batch_count, count - res.size].min
-                    res = res + @analysis.post(@predict_link, {'data' => data, 'count' => batch_count, 'return_fixed' => false})
-                end
+            if not row['_request_id'].is_a? String
+              raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
+            end
+            ncols = (row.values.select {|v| v.nil?}).size
+            tcols = (row.keys.select {|k| k != '_request_id'}).size
+            if tcols > maxcols
+                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with more than #{maxcols} combined fixed and predicted values.")
+            end
+            if ncols > maxcells
+                raise VeritableError.new("Predict -- Cannot predict for row #{row['_request_id']} with #{ncols} missing values: exceeds predicted cell limit of #{maxcells}.")
+            end
+            n = ncols * count
+            if (ncells + n) > maxcells
+                execute_batch(batch, count, maxcells).each {|x| y << x}
+                ncells = n
+                batch = [row]
             else
-                res = @analysis.post(@predict_link, {'data' => batch, 'count' => count, 'return_fixed' => false})
+                batch.push row
+                ncells = ncells + n
             end
-            if not res.is_a? Array
-              begin
-                res.to_s
-              rescue
-                raise VeritableError.new("Predict -- Error making predictions.")
-              else
-                raise VeritableError.new("Predict -- Error making predictions: #{res}")
-              end
-            end  
-            preds = []
-            (0...batch.size).each {|i|
-                request = batch[i].clone
-                request_id = request['_request_id']
-                distribution = res[(i * count)...((i + 1) * count)]
-                preds.push Prediction.new(request, distribution, @analysis.schema, request_id)
-            }
-            return preds
-        end
-        
-    end
-    
-    class SimilarCursor
-        include Enumerable
-        def initialize(r)
-          @r = r
-        end
-        def each
-          @r.each do |x|
-            yield x
           end
+          execute_batch(batch,count, maxcells).each {|x| y << x}
         end
+      }
     end
 
-end
-
+    def execute_batch(batch, count, maxcells)
+      if batch.size == 0
+          return []
+      end
+      if batch.size == 1
+          data = batch[0]
+          ncols = (data.values.select {|v| v.nil?}).size
+          max_batch_count = (ncols == 0) ? count : (maxcells/ncols).to_i
+          res = []
+          while res.size < count do
+              batch_count = [max_batch_count, count - res.size].min
+              res = res + post(link('predict'), {'data' => data, 'count' => batch_count, 'return_fixed' => false})
+          end
+      else
+          res = post(link('predict'), {'data' => batch, 'count' => count, 'return_fixed' => false})
+      end
+      if not res.is_a? Array
+        begin
+          res.to_s
+        rescue
+          raise VeritableError.new("Predict -- Error making predictions.")
+        else
+          raise VeritableError.new("Predict -- Error making predictions: #{res}")
+        end
+      end  
+      preds = []
+      (0...batch.size).each {|i|
+          request = batch[i].clone
+          request_id = request['_request_id']
+          distribution = res[(i * count)...((i + 1) * count)]
+          preds.push Prediction.new(request, distribution, schema, request_id)
+      }
+      return preds
+    end
+  end
 
   # Represents a schema for a Veritable analysis
   #
@@ -934,8 +889,6 @@ end
           @uncertainty[k] = 0.0
         end
       }
-      
-      
     end
     
     # Calculates the probability a column's value lies within a range.
