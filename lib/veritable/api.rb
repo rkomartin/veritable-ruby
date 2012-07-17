@@ -1,3 +1,5 @@
+require 'backports/1.9.1'
+
 require 'veritable/cursor'
 require 'veritable/datatypes'
 require 'veritable/errors'
@@ -440,8 +442,6 @@ module Veritable
   class Analysis
     include VeritableResource
 
-    Enumerator = Enumerable::Enumerator unless Object.const_defined? :Enumerator
-    
     # Refreshes the local representation of the analysis
     #
     # ==== Returns
