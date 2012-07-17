@@ -514,8 +514,7 @@ module Veritable
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
 	  row = row.clone
-      row['_request_id'] = 'nonce'
-      return raw_predict([row].to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
+      raw_predict([row].to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
     end
     
 
@@ -657,7 +656,9 @@ module Veritable
               raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
             end
             if not row['_request_id'].is_a? String
-              raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
+              if (rows.peek rescue false)
+                raise VeritableError.new("Predict -- Rows for batch predictions must contain a string '_request_id' field: #{row}")
+              end
             end
             ncols = (row.values.select {|v| v.nil?}).size
             tcols = (row.keys.select {|k| k != '_request_id'}).size
@@ -677,7 +678,7 @@ module Veritable
                 ncells = ncells + n
             end
           end
-          execute_batch(batch,count, maxcells).each {|x| y << x}
+          execute_batch(batch, count, maxcells).each {|x| y << x}
         end
       }
     end
