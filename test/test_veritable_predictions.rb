@@ -110,7 +110,7 @@ class VeritablePredictionsTest < Test::Unit::TestCase
 
   def test_make_prediction_with_invalid_column_fails
     r = {'cat' => 'b', 'ct' => 2, 'real' => nil, 'jello' => false}
-    assert_raise(Veritable::VeritableError) {@a2.predict r.to_a}
+    assert_raise(Veritable::VeritableError) {(@a2.predict r).to_a}
   end
 
   def test_make_batch_prediction_missing_request_id_fails
