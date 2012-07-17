@@ -513,7 +513,7 @@ module Veritable
       if not row.is_a? Hash
         raise VeritableError.new("Predict -- Must provide a row hash to make predictions.")
       end
-	  row = row.clone
+      row = row.clone
       raw_predict([row].to_enum, count, api_limits['predictions_max_response_cells'], api_limits['predictions_max_cols']).next
     end
     
@@ -637,7 +637,7 @@ module Veritable
     private
 
     def raw_predict(rows, count, maxcells, maxcols)
-      Enumerator.new { |y|
+      return Enumerator.new { |y|
         update if running?
         if running?
           raise VeritableError.new("Predict -- Analysis with id #{_id} is still running and not yet ready to predict.")
@@ -646,12 +646,7 @@ module Veritable
         elsif succeeded?
           ncells = 0
           batch = []
-          while (true)
-            begin
-              row = rows.next
-            rescue StopIteration
-              break
-            end
+          rows.each { |row|
             if not row.is_a? Hash
               raise VeritableError.new("Predict -- Invalid row for predictions: #{row}")
             end
@@ -677,7 +672,7 @@ module Veritable
                 batch.push row
                 ncells = ncells + n
             end
-          end
+          }
           execute_batch(batch, count, maxcells).each {|x| y << x}
         end
       }
