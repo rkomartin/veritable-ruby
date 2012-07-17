@@ -233,7 +233,7 @@ module Veritable
     # Batch uploads multiple rows to the table
     #
     # ==== Arguments
-    # * +rows+ -- an Enumerable of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
+    # * +rows+ -- an Enumerator over row data Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table.
     # * +per_page+ -- optionally controls the number of rows to upload in each batch. Defaults to +100+.
     #
     # ==== Returns
@@ -256,7 +256,7 @@ module Veritable
     # Batch deletes a list of rows from the table
     #
     # ==== Arguments
-    # * +rows+ -- an Enumerable of Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
+    # * +rows+ -- an Enumerator over row data Hashes, each of which represents a row of the table. Each row must contain the key <tt>"_id"</tt>, whose value must be a String containing only alphanumeric characters, underscores, and hyphens, and must be unique in the table. Any other keys will be ignored.
     # * +per_page+ -- optionally controls the number of rows to delete in each batch. Defaults to +100+.
     #
     # ==== Returns
@@ -437,6 +437,7 @@ module Veritable
   # * +wait+ -- blocks until the analysis succeeds or fails
   # * +predict+ -- makes new predictions based on the analysis
   # * +related_to+ -- calculates column relatedness based on the analysis
+  # * +similar_to+ -- calculates row relatedness based on the analysis
   # 
   # See also: https://dev.priorknowledge.com/docs/client/ruby  
   class Analysis
@@ -520,11 +521,11 @@ module Veritable
     # Makes predictions based on the analysis for multiple rows at a time
     #
     # ==== Arguments
-    # * +rows+ -- an Enumerable of Hashes, each of which represents a row whose missing values are to be predicted. Keys must be valid String ids of columns contained in the underlying table, and values must be either fixed (conditioning) values of an appropriate type for each column, or +nil+ for values to be predicted. Each row Hash must also have a '_request_id' key with a unique string value.
+    # * +rows+ -- an Enumerator over prediction request Hashes, each of which represents a row whose missing values are to be predicted. Keys must be valid String ids of columns contained in the underlying table, and values must be either fixed (conditioning) values of an appropriate type for each column, or +nil+ for values to be predicted. Each prediction request Hash must also have a '_request_id' key with a unique string value.
     # * +count+ -- optionally specify the number of samples from the predictive distribution to return. Defaults to +100+.
     #
     # ==== Returns
-    # An Enumerable of Veritable::Prediction objects
+    # An Enumerator over Veritable::Prediction objects
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def batch_predict(rows, count=100)
@@ -569,7 +570,7 @@ module Veritable
     # * +return_data+ -- if +true+, the full row content will be returned. If +false+, only the '_id' field for each row will be returned. Default is +true+.
     #
     # ==== Returns
-    # An Enumerable of row entries ordered from most similar to least similar. 
+    # An Enumerator over row entries ordered from most similar to least similar. 
     # Each row entry is an array with the first element being the row and 
     # the second element being a relatedness score between 0 to 1.
     # 
