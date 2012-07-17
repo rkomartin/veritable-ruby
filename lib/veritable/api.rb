@@ -1,12 +1,11 @@
 require 'veritable/cursor'
 require 'veritable/datatypes'
+require 'veritable/enumerator'
 require 'veritable/errors'
 require 'veritable/resource'
 require 'veritable/util'
 
-module Veritable
-
-
+module Veritable  
   # Represents the resources available to a user of the Veritable API.
   #
   # Users should not initialize directly; use Veritable.connect as the entry point.
@@ -634,6 +633,8 @@ module Veritable
     def description; @doc['description']; end
     
     private
+
+    Enumerator = Veritable::Enumerable::Enumerator unless Object.const_defined? :Enumerator
 
     def raw_predict(rows, count, maxcells, maxcols)
       Enumerator.new { |y|
