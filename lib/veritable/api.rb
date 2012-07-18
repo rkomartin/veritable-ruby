@@ -569,9 +569,8 @@ module Veritable
     # * +return_data+ -- if +true+, the full row content will be returned. If +false+, only the '_id' field for each row will be returned. Default is +true+.
     #
     # ==== Returns
-    # An Enumerator over row entries ordered from most similar to least similar. 
-    # Each row entry is an array with the first element being the row and 
-    # the second element being a relatedness score between 0 to 1.
+    # An Enumerator over row data Hashes ordered from most similar to least similar.
+    # Each row data Hash has a '_similarity' key containing a similarity score between 0 and 1.   
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def similar_to(row, column_id, opts={:max_rows => 10, :return_data => true})

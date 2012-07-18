@@ -66,11 +66,15 @@ class TestVeritableSimilar < Test::Unit::TestCase
 
   def test_similar_to_return_data
     s = @a.similar_to('row1','cat', opts={:max_rows => 1, :return_data => true})
-	s.each {|r,c|
+	s.each {|r|
+		assert r.include? '_id'
+		assert r.include? '_similarity'
 		assert r.include? 'ct'
 	}
     s = @a.similar_to('row1','cat', opts={:max_rows => 1, :return_data => false})
-	s.each {|r,c|
+	s.each {|r|
+		assert r.include? '_id'
+		assert r.include? '_similarity'
 		assert (not (r.include? 'ct'))
 	}
   end
