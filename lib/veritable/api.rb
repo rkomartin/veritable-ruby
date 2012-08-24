@@ -1179,7 +1179,7 @@ module Veritable
     def rows(opts={'group_id' => nil, 'return_data' => true, 'start' => nil, 'limit' => nil})
       update if running?
       if succeeded?
-        if not(opts['group_id'].nil?)
+        if not opts['group_id'].nil?
             collection = link('groups') + '/' + opts['group_id'].to_s
         else
             collection = link('rows')
