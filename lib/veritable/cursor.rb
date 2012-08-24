@@ -67,7 +67,7 @@ module Veritable
       else
         get_params = {:count => per_page, :start => start}
         get_params.update(@opts['extra_args']) if @opts['extra_args']
-        @doc = get(collection, params={:count => per_page, :start => start})
+        @doc = get(collection, params=get_params)
       end
       return data.length
     end

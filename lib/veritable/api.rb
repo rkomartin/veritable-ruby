@@ -601,7 +601,7 @@ module Veritable
     # * +column_id+ -- the name of the column along which to group rows
     #
     # ==== Returns
-    # An Enumerator over Grouping instances
+    # A Grouping instance for the column id
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def grouping(column_id)
@@ -615,7 +615,7 @@ module Veritable
     # * +column_ids+ -- an array of column names to create groupings for
     #
     # ==== Returns
-    # A Grouping instance for the column id
+    # An Enumerator over Grouping instances
     # 
     # See also: https://dev.priorknowledge.com/docs/client/ruby  
     def groupings(column_ids)
