@@ -112,7 +112,7 @@ class TestVeritableGroup < Test::Unit::TestCase
       assert r.include? '_id'
       assert r.include? '_group_id'
       assert r.include? '_group_confidence'
-      assert not r.include? 'cat'
+      assert (not r.include? 'cat')
     }
   end
 
