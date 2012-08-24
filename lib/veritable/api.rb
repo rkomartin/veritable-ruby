@@ -594,6 +594,45 @@ module Veritable
       end
     end
 
+    # Get a grouping for a particular column.
+    # If no grouping is currently running, this will create it.
+    #
+    # ==== Arguments
+    # * +column_id+ -- the name of the column along which to group rows
+    #
+    # ==== Returns
+    # An Enumerator over Grouping instances
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def grouping(column_id)
+      return (groupings([column_id]).to_a)[0]
+    end
+    
+    # Gets groupings for a list of columns.
+    # If corresponding groupings are not currently running, this will create them.
+    #
+    # ==== Arguments
+    # * +column_ids+ -- an array of column names to create groupings for
+    #
+    # ==== Returns
+    # A Grouping instance for the column id
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def groupings(column_ids)
+      update if running?
+      if succeeded?
+        doc = post(link('group'), {:columns => column_ids}.update(@opts))
+        return doc['groupings'].to_a.map {|g| Grouping.new(@opts, g)}
+      elsif running?
+        raise VeritableError.new("Grouping -- Analysis with id #{_id} is still running and not yet ready to calculate groupings.")
+      elsif failed?
+        raise VeritableError.new("Grouping -- Analysis with id #{_id} has failed and cannot calculate groupings.")
+      else
+        raise VeritableError.new("Grouping -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
+    end
+
+    
     # Returns a string representation of the analysis resource
     def inspect; to_s; end
 
@@ -1026,4 +1065,167 @@ module Veritable
       end
     end
   end
+
+  # Represents the resources associated with a grouping resource. 
+  # Lets you get the status of a grouping and get information about discovered groups.
+  #
+  # ==== Attributes
+  # * +column_id+ -- the column id of this grouping
+  # * +state+ -- the state of the grouping operation, one of <tt>["running", "succeeded", "failed"]</tt>
+  # * +running?+ -- +true+ if +state+ is <tt>"running"</tt>
+  # * +succeeded?+ -- ++true+ if +state+ is <tt>"succeeded"</tt>
+  # * +failed?+ -- +true+ if +state+ is <tt>"failed"</tt>
+  #
+  # ==== Methods
+  # * +update+ -- refreshes the local representation of the grouping resource
+  # * +wait+ -- blocks until the grouping succeeds or fails
+  # * +groups+ -- gets an iterator over all groups in the grouping
+  # * +rows+ -- get rows and confidence information for a particular group
+  # * +row+ -- get group information for a particular row
+  # 
+  # See also: https://dev.priorknowledge.com/docs/client/ruby  
+  class Grouping
+    include VeritableResource
+
+    # The column id of this grouping
+    def column_id; @doc['column_name']; end
+
+    # The state of the analysis
+    #
+    # One of <tt>["running", "succeeded", "failed"]</tt>
+    def state; @doc['state']; end
+
+    # +true+ if +state+ is <tt>"running"</tt>, otherwise +false+
+    def running?; state == 'running'; end
+
+    # +true+ if +state+ is <tt>"succeeded"</tt>, otherwise +false+
+    def succeeded?; state == 'succeeded'; end
+
+    # +true+ if +state+ is <tt>"failed"</tt>, otherwise +false+
+    def failed?; state == 'failed'; end
+
+    # Refreshes the local representation of the grouping
+    #
+    # ==== Returns
+    # +nil+ on success
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def update; @doc = get(link('self')); nil; end
+
+    # Blocks until the grouping succeeds or fails
+    #
+    # ==== Arguments
+    # * +max_time+ -- the maximum time to wait, in seconds. Default is +nil+, in which case the method will wait indefinitely.
+    # * +poll+ -- the number of seconds to wait between polling the API server. Default is +2+.
+    #
+    # ==== Returns
+    # +nil+ on success.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby  
+    def wait(max_time=nil, poll=2)
+      elapsed = 0
+      while running?
+        sleep poll
+        if not max_time.nil?
+          elapsed += poll
+          if elapsed > max_time
+            raise VeritableError.new("Wait for grouping -- Maximum time of #{max_time} second exceeded.")
+          end
+        end
+        update
+      end
+    end
+
+    
+    # Gets all groups in the grouping
+    #
+    # ==== Arguments
+    # * +opts+ A Hash optionally containing the keys
+    #   - <tt>"start"</tt> -- the group id from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the lexicographically first group id.
+    #   - <tt>"limit"</tt> -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of results returned will not be limited.
+    #
+    # ==== Returns
+    # A Veritable::Cursor. The cursor will return group ids in lexicographic order.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def groups(opts={'start' => nil, 'limit' => nil})
+      update if running?
+      if succeeded?
+        return Cursor.new({'collection' => link('groups'),
+          'start' => opts['start'],
+          'limit' => opts['limit']}.update(@opts)) { |g| g['group_id'] }
+      elsif running?
+        raise VeritableError.new("Grouping on column #{column_id} is still running and not yet ready to return groups.")
+      elsif failed?
+        raise VeritableError.new("Grouping on column #{column_id} has failed and cannot return groups.")
+      else
+        raise VeritableError.new("Grouping -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
+    end
+    
+    # Get rows and confidence information for a particular group.
+    #
+    # ==== Arguments
+    # * +opts+ A Hash optionally containing the keys
+    #   - <tt>"group_id"</tt> -- The id of the group of interest. If nil (default), returns all rows in the table
+    #   - <tt>"return_data"</tt> -- If true, return row data values along with group assignment and confidence info (default: True).
+    #   - <tt>"start"</tt> -- the integer index from which the cursor should begin returning results. Defaults to +nil+, in which case the cursor will return result starting with the first row.
+    #   - <tt>"limit"</tt> -- the total number of results to return (must be a Fixnum). Defaults to +nil+, in which case the number of rows returned will not be limited.
+    #
+    # ==== Returns
+    # A Veritable::Cursor. The cursor will return rows from the group.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def rows(opts={'group_id' => nil, 'return_data' => true, 'start' => nil, 'limit' => nil})
+      update if running?
+      if succeeded?
+        if not(opts['group_id'].nil?)
+            collection = link('groups') + '/' + opts['group_id'].to_s
+        else
+            collection = link('rows')
+        end
+        return Cursor.new({'collection' => collection,
+            'start' => opts['start'],
+            'limit' => opts['limit'],
+            'extra_args' => {:return_data => opts['return_data']}}.update(@opts))
+      elsif running?
+        raise VeritableError.new("Grouping on column #{column_id} is still running and not yet ready to return groups.")
+      elsif failed?
+        raise VeritableError.new("Grouping on column #{column_id} has failed and cannot return groups.")
+      else
+        raise VeritableError.new("Grouping -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
+    end
+
+
+    # Get group information for a particular row.
+    #
+    # ==== Arguments
+    # * +target_row+ The row hash of interest. The row hash must contain an _id field. All other fields will be ignored.
+    # * +opts+ A Hash optionally containing the keys
+    #   - <tt>"return_data"</tt> -- If true, return row data values along with group assignment and confidence info (default: True).
+    #
+    # ==== Returns
+    # A row data hash with group_id and confidence specified in the _group_id and _confidence keys respectively.
+    # 
+    # See also: https://dev.priorknowledge.com/docs/client/ruby      
+    def row(target_row, opts={'return_data' => true})
+      update if running?
+      if succeeded?
+        row_id = target_row['_id']
+        res = get(link('rows') +'/'+row_id, params={:return_data => opts['return_data']})
+        return res['row']
+      elsif running?
+        raise VeritableError.new("Grouping on column #{column_id} is still running and not yet ready to return groups.")
+      elsif failed?
+        raise VeritableError.new("Grouping on column #{column_id} has failed and cannot return groups.")
+      else
+        raise VeritableError.new("Grouping -- Shouldn't be here -- please let us know at support@priorknowledge.com.")
+      end
+    end
+
+  end
+
+  
+
 end

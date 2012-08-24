@@ -22,7 +22,9 @@ module Veritable
       default_opts({'per_page' => 100})
 
       collection_key = collection.split("/")[-1]
-      @doc = get(collection, params={:count => per_page, :start => start})
+      get_params = {:count => per_page, :start => start}
+      get_params.update(@opts['extra_args']) if @opts['extra_args']
+      @doc = get(collection, params=get_params)
       @doc.has_key?(collection_key) ? @opts['key'] = collection_key : @opts['key'] = 'data'
       @opts['lazymap'] = lazymap if lazymap
     end
@@ -63,6 +65,8 @@ module Veritable
       elsif last_page?
         return 0
       else
+        get_params = {:count => per_page, :start => start}
+        get_params.update(@opts['extra_args']) if @opts['extra_args']
         @doc = get(collection, params={:count => per_page, :start => start})
       end
       return data.length
