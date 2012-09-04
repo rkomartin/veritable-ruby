@@ -544,7 +544,7 @@ module Veritable
                     rows[i].delete c
                   else
                     if (not rows[i][c].is_a? Float) or rows[i][c].nan? or rows[i][c].infinite?
-                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a float.", {'row' => i, 'col' => c})
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is Inf of NaN, not a valid float.", {'row' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'boolean'
