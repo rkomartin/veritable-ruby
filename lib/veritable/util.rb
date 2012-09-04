@@ -356,8 +356,8 @@ module Veritable
 
       private
 
-	  COUNT_LIMIT = 100000
-	  
+      COUNT_LIMIT = 100000
+      
       # Private helper function for form encoding
       def flatten_params(params, parent=nil)
         result = []
@@ -533,6 +533,9 @@ module Veritable
                   if opts['convert_types'] # try converting to float
                     begin
                       rows[i][c] = Float(rows[i][c]) unless rows[i][c].is_a? Float
+                      if rows[i][c].nan? or rows[i][c].infinite?
+                        raise VeritableError.new("Float is NaN or Inf",{})
+                      end
                     rescue
                       rows[i][c] = opts['remove_invalids'] ? nil : rows[i][c] # flag for removal
                     end
@@ -540,8 +543,8 @@ module Veritable
                   if rows[i][c].nil?
                     rows[i].delete c
                   else
-                    if not rows[i][c].is_a? Float
-                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is a #{rows[i][c].class}, not a float.", {'row' => i, 'col' => c})
+                    if (not rows[i][c].is_a? Float) or rows[i][c].nan? or rows[i][c].infinite?
+                      raise VeritableError.new("Validate -- row #{i}, key #{c}, value #{rows[i][c]} is Inf of NaN, not a valid float.", {'row' => i, 'col' => c})
                     end
                   end
                 elsif coltype == 'boolean'

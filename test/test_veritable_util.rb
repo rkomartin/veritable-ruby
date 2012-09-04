@@ -709,6 +709,38 @@ class VeritableTestUtils < Test::Unit::TestCase
         assert e.col == 'ColFloat'
     end
   end
+
+  def test_data_nan_float_real_fail
+    testrows = [
+        {'_request_id' => '0', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_request_id' => '1', 'ColInt' => 4, 'ColFloat' =>  (1.0/0.0-1.0/0.0), 'ColCat' => 'b', 'ColBool' => false}]
+    assert_raise Veritable::VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+    end
+    begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+    rescue Veritable::VeritableError => e
+        assert e.row == 1
+        assert e.col == 'ColFloat'
+    end
+  end
+
+  def test_data_inf_float_real_fail
+    testrows = [
+        {'_request_id' => '0', 'ColInt' => 3, 'ColFloat' => 3.1, 'ColCat' => 'a', 'ColBool' => true},
+        {'_request_id' => '1', 'ColInt' => 4, 'ColFloat' =>  (1.0/0.0), 'ColCat' => 'b', 'ColBool' => false}]
+    assert_raise Veritable::VeritableError do
+        Veritable::Util.validate_predictions(testrows, @vschema)
+    end
+    begin
+        Veritable::Util.validate_predictions(testrows, @vschema)
+    rescue Veritable::VeritableError => e
+        assert e.row == 1
+        assert e.col == 'ColFloat'
+    end
+  end
+
+
   
   def test_pred_nonvalid_float_real_fail
     testrows = [

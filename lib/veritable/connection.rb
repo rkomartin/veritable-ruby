@@ -19,6 +19,9 @@ module Veritable
     # Wraps the HTTP GET logic
     def get(url, params=nil, headers={})
       if params and params.count > 0
+        params.keys.to_a.each {|k|
+            params.delete(k) if params[k].nil?
+        }
         query_string = Util.query_params(params)
         url += "?#{query_string}"
       end
